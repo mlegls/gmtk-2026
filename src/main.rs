@@ -10,7 +10,7 @@ pub const PLAYER_SIZE: Vec3 = vec3(1.0, 1.0, 1.0);
 pub const GRID_SIZE: Vec2 = vec2(1.0, 1.0);
 
 // in seconds
-pub const ANIMATION_LENGTH: f32 = 0.5;
+pub const ANIMATION_LENGTH: f32 = 0.25;
 
 fn main() {
     App::new()
