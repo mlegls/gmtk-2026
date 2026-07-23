@@ -2,7 +2,6 @@ use std::f32::consts::PI;
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
 use crate::ecs::{Arrow, Direction, GridLocation, Orientation, Player};
-use crate::PLAYER_SIZE;
 use crate::ui::ui;
 
 pub fn game_scene_plugin(app: &mut App) {
@@ -13,7 +12,7 @@ fn scene() -> impl SceneList {
     bsn_list![
         isometric_camera(), point_light(), ui(),
         (
-            cube()
+            player()
             Player
             Orientation(Direction::North)
         ),
@@ -49,28 +48,17 @@ fn point_light() -> impl Scene {
     }
 }
 
-fn cube() -> impl Scene {
+fn player() -> impl Scene {
     bsn! {
-        Mesh3d(asset_value(Cuboid::from_size(PLAYER_SIZE)))
-        MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(124, 144, 255)))
         Transform::from_xyz(0.0, 0.5, 0.0)
         GridLocation(Vec3::new(0.0, 0.0, 0.0))
         Children [
-            (
-                Mesh3d(asset_value(Cuboid::new(0.2, 0.2, 0.2)))
-                MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(255, 0, 0)))
-                Transform::from_xyz(0.0, PLAYER_SIZE.y/2.0, 0.0)
-            ),
-            (
-                Mesh3d(asset_value(Cuboid::new(0.2, 0.2, 0.2)))
-                MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(0, 255, 0)))
-                Transform::from_xyz(PLAYER_SIZE.x/2.0, 0.0, 0.0)
-            ),
-            (
-                Mesh3d(asset_value(Cuboid::new(0.2, 0.2, 0.2)))
-                MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(255, 255, 255)))
-                Transform::from_xyz(0.0, 0.0, PLAYER_SIZE.z/2.0)
-            )
+            template(|ctx| {
+                Ok(WorldAssetRoot(ctx.resource::<AssetServer>().load(
+                    GltfAssetLabel::Scene(0).from_asset("models/bot.gltf")
+                )))
+            })
+            Transform::from_xyz(0.0, -0.5, 0.0)
         ]
     }
 }
