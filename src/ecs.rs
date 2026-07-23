@@ -1,6 +1,6 @@
 use crate::{GRID_SIZE, PLAYER_SIZE};
 use bevy::prelude::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::f32::consts::PI;
 use std::time::Instant;
 
@@ -89,11 +89,14 @@ pub struct CameraRig;
 pub struct GridLocation(pub Vec3);
 impl GridLocation {
     pub fn to_world_space(&self) -> Vec3 {
-        let mut grid_location = vec3(self.0.x, 0.0, self.0.z);
+        let mut grid_location = vec3(self.0.x as f32, 0.0, self.0.z as f32);
         grid_location *= GRID_SIZE.extend(GRID_SIZE.y);
         grid_location
     }
 }
+/// a set of locations in the grid that the player can't go in
+#[derive(Resource, Clone, Default, Debug)]
+pub struct ObstructedSet(pub HashSet<UVec3>);
 
 #[derive(Component, Clone, Debug)]
 pub struct Moving {
