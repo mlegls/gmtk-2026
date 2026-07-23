@@ -1,13 +1,20 @@
 use std::f32::consts::PI;
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
+use crate::ecs::{GridLocation, Player};
+use crate::PLAYER_SIZE;
 
 pub fn game_scene_plugin(app: &mut App) {
     app.add_systems(Startup, scene.spawn());
 }
 
 fn scene() -> impl SceneList {
-    bsn_list![isometric_camera(), point_light(), cube(), ground()]
+    bsn_list![isometric_camera(), point_light(),
+        (
+            cube()
+            Player
+        ),
+        ground()]
 }
 
 fn isometric_camera() -> impl Scene {
@@ -18,11 +25,9 @@ fn isometric_camera() -> impl Scene {
         ..OrthographicProjection::default_3d()
     });
     let rotation = Quat::from_euler(EulerRot::YXZ, PI/4.0, -PI/6.0, 0.0);
-    //let transform = Transform::from_xyz(10.0, 10.0, -10.0).looking_at(Vec3::ZERO, Vec3::Y);
     bsn! {
         Camera3d
         template_value(projection)
-        //template_value(transform)
         Transform {
             rotation,
             translation: vec3(40.0, 32.66, 40.0)
@@ -41,9 +46,27 @@ fn point_light() -> impl Scene {
 
 fn cube() -> impl Scene {
     bsn! {
-        Mesh3d(asset_value(Cuboid::new(1.0, 1.0, 1.0)))
+        Mesh3d(asset_value(Cuboid::from_size(PLAYER_SIZE)))
         MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(124, 144, 255)))
         Transform::from_xyz(0.0, 0.5, 0.0)
+        GridLocation(Vec2::new(0.0, 0.0))
+        Children [
+            (
+                Mesh3d(asset_value(Cuboid::new(0.2, 0.2, 0.2)))
+                MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(255, 0, 0)))
+                Transform::from_xyz(0.0, PLAYER_SIZE.y/2.0, 0.0)
+            ),
+            (
+                Mesh3d(asset_value(Cuboid::new(0.2, 0.2, 0.2)))
+                MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(0, 255, 0)))
+                Transform::from_xyz(PLAYER_SIZE.x/2.0, 0.0, 0.0)
+            ),
+            (
+                Mesh3d(asset_value(Cuboid::new(0.2, 0.2, 0.2)))
+                MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(255, 255, 255)))
+                Transform::from_xyz(0.0, 0.0, PLAYER_SIZE.z/2.0)
+            )
+        ]
     }
 }
 
