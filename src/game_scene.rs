@@ -3,6 +3,7 @@ use bevy::camera::ScalingMode;
 use bevy::prelude::*;
 use crate::ecs::{Arrow, Direction, GridLocation, Orientation, Player};
 use crate::PLAYER_SIZE;
+use crate::ui::ui;
 
 pub fn game_scene_plugin(app: &mut App) {
     app.add_systems(Startup, scene.spawn());
@@ -10,14 +11,14 @@ pub fn game_scene_plugin(app: &mut App) {
 
 fn scene() -> impl SceneList {
     bsn_list![
-        isometric_camera(), point_light(),
+        isometric_camera(), point_light(), ui(),
         (
             cube()
             Player
             Orientation(Direction::North)
         ),
         arrow(),
-        ground()
+        ground(),
     ]
 }
 

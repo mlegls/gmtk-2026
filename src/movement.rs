@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 use std::time::Instant;
 use bevy::prelude::*;
-use crate::ecs::{Arrow, Direction, GridLocation, Moving, Orientation, Player};
+use crate::ecs::{Arrow, CompletedTurn, Direction, GridLocation, Moving, Orientation, Player, TurnCounter};
 use crate::{ANIMATION_LENGTH, PLAYER_SIZE};
 
 pub fn movement_plugin(app: &mut App) {
@@ -76,8 +76,11 @@ fn input(
 fn do_movement(
     mut player: Single<(Entity, &mut Transform, &mut GridLocation, &Moving, &mut Orientation), With<Player>>,
     mut arrow: Single<(&mut Transform), (With<Arrow>, Without<Player>)>,
+    mut turn_counter: ResMut<TurnCounter>,
+    mut completed_turn_sender: MessageWriter<CompletedTurn>,
     mut commands: Commands,
 ) {
+    if **turn_counter == 0 { return }
     let (player_entity, mut transform, mut grid_location, moving, mut orientation) = player.into_inner();
     let (mut arrow_transform) = arrow.into_inner();
     let progress = moving.start.elapsed().as_secs_f32() / ANIMATION_LENGTH;
@@ -92,6 +95,9 @@ fn do_movement(
                 commands.entity(player_entity).remove::<Moving>();
                 transform.translation = grid_location.to_world_space() + vec3(0.0, PLAYER_SIZE.y/2.0, 0.0);
                 transform.rotation = Quat::from_axis_angle(orient_rot * Vec3::X, -PI/2.0) * moving.initial_rotation;
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
             }
         }
         Direction::South => {
@@ -101,6 +107,9 @@ fn do_movement(
                 commands.entity(player_entity).remove::<Moving>();
                 transform.translation = grid_location.to_world_space() + vec3(0.0, PLAYER_SIZE.y/2.0, 0.0);
                 transform.rotation = Quat::from_axis_angle(orient_rot * Vec3::X, PI/2.0) * moving.initial_rotation;
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
             }
         }
         Direction::East => {
@@ -110,6 +119,9 @@ fn do_movement(
                 commands.entity(player_entity).remove::<Moving>();
                 transform.translation = grid_location.to_world_space() + vec3(0.0, PLAYER_SIZE.y/2.0, 0.0);
                 transform.rotation = Quat::from_axis_angle(orient_rot * Vec3::Z, -PI/2.0) * moving.initial_rotation;
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
             }
         }
         Direction::West => {
@@ -119,6 +131,9 @@ fn do_movement(
                 commands.entity(player_entity).remove::<Moving>();
                 transform.translation = grid_location.to_world_space() + vec3(0.0, PLAYER_SIZE.y/2.0, 0.0);
                 transform.rotation = Quat::from_axis_angle(orient_rot * Vec3::Z, PI/2.0) * moving.initial_rotation;
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
             }
         }
         Direction::Left => {
@@ -130,6 +145,9 @@ fn do_movement(
 
                 *orientation = Orientation(orientation.0.turn_left());
                 arrow_transform.rotation = orientation.0.to_rotation();
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
             }
         }
         Direction::Right => {
@@ -141,6 +159,9 @@ fn do_movement(
 
                 *orientation = Orientation(orientation.0.turn_right());
                 arrow_transform.rotation = orientation.0.to_rotation();
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
             }
         }
         Direction::Around => {
@@ -152,6 +173,9 @@ fn do_movement(
 
                 *orientation = Orientation(orientation.0.turn_left().turn_left());
                 arrow_transform.rotation = orientation.0.to_rotation();
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
             }
         }
     }

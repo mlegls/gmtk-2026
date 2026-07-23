@@ -4,6 +4,11 @@ use bevy::prelude::*;
 use crate::ecs::Direction::Around;
 use crate::{GRID_SIZE, PLAYER_SIZE};
 
+#[derive(Resource, Clone, Debug, Deref, DerefMut)]
+pub struct TurnCounter(pub u32);
+#[derive(Component, Clone, Default, Debug)]
+pub struct TurnCountText;
+
 #[derive(Component, Clone, Default, Debug)]
 pub struct Player;
 #[derive(Component, Clone, Default, Debug)]
@@ -27,6 +32,8 @@ pub struct Moving {
 }
 #[derive(Component, Clone, Default, Debug)]
 pub struct Orientation(pub Direction);
+#[derive(Message, Clone, Debug)]
+pub struct CompletedTurn;
 
 #[derive(Copy, Clone, Default, Debug)]
 pub enum Direction {
