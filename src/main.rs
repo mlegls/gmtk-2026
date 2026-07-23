@@ -9,7 +9,7 @@ use crate::game_scene::game_scene_plugin;
 use crate::movement::movement_plugin;
 use crate::ui::ui_plugin;
 
-pub const MAX_TURN_COUNT: u32 = 10;
+pub const MAX_TURN_COUNT: u32 = 1000;
 
 pub const PLAYER_SIZE: Vec3 = vec3(1.0, 1.0, 1.0);
 pub const GRID_SIZE: Vec2 = vec2(1.0, 1.0);
