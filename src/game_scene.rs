@@ -1,8 +1,10 @@
-use std::f32::consts::PI;
+use crate::ecs::{
+    Arrow, AvailableActions, CameraRig, Direction, GridLocation, Orientation, Player,
+};
+use crate::ui::ui;
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
-use crate::ecs::{Arrow, CameraRig, Direction, GridLocation, Orientation, Player};
-use crate::ui::ui;
+use std::f32::consts::PI;
 
 pub fn game_scene_plugin(app: &mut App) {
     app.add_systems(Startup, scene.spawn());
@@ -14,6 +16,7 @@ fn scene() -> impl SceneList {
         (
             player()
             Player
+            AvailableActions::default()
             Orientation(Direction::North)
         ),
         arrow(),
@@ -28,7 +31,7 @@ fn isometric_camera() -> impl Scene {
         },
         ..OrthographicProjection::default_3d()
     });
-    let rotation = Quat::from_euler(EulerRot::YXZ, PI/4.0, -PI/6.0, 0.0);
+    let rotation = Quat::from_euler(EulerRot::YXZ, PI / 4.0, -PI / 6.0, 0.0);
     bsn! {
         CameraRig
         Transform::default()

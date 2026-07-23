@@ -1,6 +1,6 @@
 use crate::ecs::{
-    Arrow, CameraRig, CompletedTurn, Direction, GridLocation, Moving, Orientation, Player,
-    TurnCounter,
+    Arrow, AvailableActions, CameraRig, CompletedTurn, Direction, GridLocation, Moving,
+    Orientation, Player, PlayerAction, TurnCounter,
 };
 use crate::{ANIMATION_LENGTH, PLAYER_SIZE};
 use bevy::prelude::*;
@@ -8,7 +8,7 @@ use std::f32::consts::PI;
 use std::time::Instant;
 
 pub fn movement_plugin(app: &mut App) {
-    app.add_systems(Update, input)
+    app.add_systems(Update, (toggle_actions, input))
         .add_systems(Update, (do_movement, follow_camera).chain());
 }
 
@@ -17,15 +17,55 @@ struct CameraTurn {
     initial_rotation: Quat,
 }
 
+fn shift_pressed(keys: &ButtonInput<KeyCode>) -> bool {
+    keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight)
+}
+
+fn action_just_pressed(
+    keys: &ButtonInput<KeyCode>,
+    available_actions: &AvailableActions,
+    action: PlayerAction,
+) -> bool {
+    available_actions.contains(action) && keys.just_pressed(action.key_code())
+}
+
+fn toggle_actions(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut available_actions: Single<&mut AvailableActions, With<Player>>,
+) {
+    if !shift_pressed(&keys) {
+        return;
+    }
+
+    for action in PlayerAction::ALL {
+        if keys.just_pressed(action.key_code()) {
+            let available = available_actions.toggle(action);
+            info!(
+                "{:?} is now {}",
+                action.key_code(),
+                if available {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+            );
+        }
+    }
+}
+
 fn input(
-    player: Single<(Entity, &Transform), (With<Player>, Without<Moving>)>,
+    player: Single<(Entity, &Transform, &AvailableActions), (With<Player>, Without<Moving>)>,
     camera: Single<(Entity, &Transform), (With<CameraRig>, Without<Player>)>,
     keys: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
 ) {
-    let (player_entity, transform) = player.into_inner();
+    if shift_pressed(&keys) {
+        return;
+    }
+
+    let (player_entity, transform, available_actions) = player.into_inner();
     let (camera_entity, camera_transform) = camera.into_inner();
-    if keys.just_pressed(KeyCode::KeyW) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::RollForward) {
         // roll north 1 space
         commands.entity(player_entity).insert(Moving {
             direction: Direction::North,
@@ -33,7 +73,7 @@ fn input(
             initial_rotation: transform.rotation,
         });
     }
-    if keys.just_pressed(KeyCode::KeyS) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::RollBackward) {
         // roll south
         commands.entity(player_entity).insert(Moving {
             direction: Direction::South,
@@ -41,7 +81,7 @@ fn input(
             initial_rotation: transform.rotation,
         });
     }
-    if keys.just_pressed(KeyCode::KeyA) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::RollLeft) {
         // roll west
         commands.entity(player_entity).insert(Moving {
             direction: Direction::West,
@@ -49,7 +89,7 @@ fn input(
             initial_rotation: transform.rotation,
         });
     }
-    if keys.just_pressed(KeyCode::KeyD) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::RollRight) {
         // roll east
         commands.entity(player_entity).insert(Moving {
             direction: Direction::East,
@@ -57,7 +97,7 @@ fn input(
             initial_rotation: transform.rotation,
         });
     }
-    if keys.just_pressed(KeyCode::KeyQ) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::TurnLeft) {
         // turn left
         commands.entity(player_entity).insert(Moving {
             direction: Direction::Left,
@@ -69,7 +109,7 @@ fn input(
             initial_rotation: camera_transform.rotation,
         });
     }
-    if keys.just_pressed(KeyCode::KeyE) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::TurnRight) {
         // turn right
         commands.entity(player_entity).insert(Moving {
             direction: Direction::Right,
@@ -81,7 +121,7 @@ fn input(
             initial_rotation: camera_transform.rotation,
         });
     }
-    if keys.just_pressed(KeyCode::KeyX) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::TurnAround) {
         // spin 180 degrees
         commands.entity(player_entity).insert(Moving {
             direction: Direction::Around,
@@ -89,7 +129,7 @@ fn input(
             initial_rotation: transform.rotation,
         });
     }
-    if keys.just_pressed(KeyCode::KeyZ) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::SlideLeft) {
         // slide left (translate, no roll)
         commands.entity(player_entity).insert(Moving {
             direction: Direction::SlideLeft,
@@ -97,7 +137,7 @@ fn input(
             initial_rotation: transform.rotation,
         });
     }
-    if keys.just_pressed(KeyCode::KeyC) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::SlideRight) {
         // slide right
         commands.entity(player_entity).insert(Moving {
             direction: Direction::SlideRight,
@@ -105,7 +145,7 @@ fn input(
             initial_rotation: transform.rotation,
         });
     }
-    if keys.just_pressed(KeyCode::Space) {
+    if action_just_pressed(&keys, available_actions, PlayerAction::Wait) {
         // wait in place (pass turn)
         commands.entity(player_entity).insert(Moving {
             direction: Direction::Wait,
