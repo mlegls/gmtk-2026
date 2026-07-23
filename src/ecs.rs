@@ -5,6 +5,9 @@ use std::f32::consts::PI;
 use std::time::Instant;
 
 #[derive(Resource, Clone, Debug, Deref, DerefMut)]
+pub struct DebugMode(pub bool);
+
+#[derive(Resource, Clone, Debug, Deref, DerefMut)]
 pub struct TurnCounter(pub u32);
 #[derive(Component, Clone, Default, Debug)]
 pub struct TurnCountText;

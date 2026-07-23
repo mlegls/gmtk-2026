@@ -1,5 +1,5 @@
 use crate::ecs::{
-    Arrow, AvailableActions, CameraRig, CompletedTurn, Direction, GridLocation, Moving,
+    Arrow, AvailableActions, CameraRig, CompletedTurn, DebugMode, Direction, GridLocation, Moving,
     Orientation, Player, PlayerAction, TurnCounter,
 };
 use crate::{ANIMATION_LENGTH, PLAYER_SIZE};
@@ -30,10 +30,11 @@ fn action_just_pressed(
 }
 
 fn toggle_actions(
+    debug_mode: Res<DebugMode>,
     keys: Res<ButtonInput<KeyCode>>,
     mut available_actions: Single<&mut AvailableActions, With<Player>>,
 ) {
-    if !shift_pressed(&keys) {
+    if !**debug_mode || !shift_pressed(&keys) {
         return;
     }
 
@@ -56,10 +57,11 @@ fn toggle_actions(
 fn input(
     player: Single<(Entity, &Transform, &AvailableActions), (With<Player>, Without<Moving>)>,
     camera: Single<(Entity, &Transform), (With<CameraRig>, Without<Player>)>,
+    debug_mode: Res<DebugMode>,
     keys: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
 ) {
-    if shift_pressed(&keys) {
+    if **debug_mode && shift_pressed(&keys) {
         return;
     }
 
