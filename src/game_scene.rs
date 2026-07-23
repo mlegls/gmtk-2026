@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
-use crate::ecs::{Arrow, Direction, GridLocation, Orientation, Player};
+use crate::ecs::{Arrow, CameraRig, Direction, GridLocation, Orientation, Player};
 use crate::ui::ui;
 
 pub fn game_scene_plugin(app: &mut App) {
@@ -30,12 +30,18 @@ fn isometric_camera() -> impl Scene {
     });
     let rotation = Quat::from_euler(EulerRot::YXZ, PI/4.0, -PI/6.0, 0.0);
     bsn! {
-        Camera3d
-        template_value(projection)
-        Transform {
-            rotation,
-            translation: vec3(40.0, 32.66, 40.0)
-        }
+        CameraRig
+        Transform::default()
+        Children [
+            (
+                Camera3d
+                template_value(projection)
+                Transform {
+                    rotation,
+                    translation: vec3(40.0, 32.66, 40.0)
+                }
+            )
+        ]
     }
 }
 

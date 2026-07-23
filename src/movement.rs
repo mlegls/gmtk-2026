@@ -1,5 +1,6 @@
 use crate::ecs::{
-    Arrow, CompletedTurn, Direction, GridLocation, Moving, Orientation, Player, TurnCounter,
+    Arrow, CameraRig, CompletedTurn, Direction, GridLocation, Moving, Orientation, Player,
+    TurnCounter,
 };
 use crate::{ANIMATION_LENGTH, PLAYER_SIZE};
 use bevy::prelude::*;
@@ -8,19 +9,17 @@ use std::time::Instant;
 
 pub fn movement_plugin(app: &mut App) {
     app.add_systems(Update, input)
-        .add_systems(Update, do_movement);
+        .add_systems(Update, (do_movement, follow_camera).chain());
 }
 
 #[derive(Component, Clone, Debug)]
 struct CameraTurn {
-    initial_translation: Vec3,
     initial_rotation: Quat,
-    pivot: Vec3,
 }
 
 fn input(
     player: Single<(Entity, &Transform), (With<Player>, Without<Moving>)>,
-    camera: Single<(Entity, &Transform), (With<Camera3d>, Without<Player>)>,
+    camera: Single<(Entity, &Transform), (With<CameraRig>, Without<Player>)>,
     keys: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
 ) {
@@ -67,9 +66,7 @@ fn input(
         });
         // orbit camera
         commands.entity(camera_entity).insert(CameraTurn {
-            initial_translation: camera_transform.translation,
             initial_rotation: camera_transform.rotation,
-            pivot: transform.translation,
         });
     }
     if keys.just_pressed(KeyCode::KeyE) {
@@ -81,9 +78,7 @@ fn input(
         });
         // orbit camera
         commands.entity(camera_entity).insert(CameraTurn {
-            initial_translation: camera_transform.translation,
             initial_rotation: camera_transform.rotation,
-            pivot: transform.translation,
         });
     }
     if keys.just_pressed(KeyCode::KeyX) {
@@ -109,7 +104,7 @@ fn do_movement(
     arrow: Single<&mut Transform, (With<Arrow>, Without<Player>)>,
     camera: Single<
         (Entity, &mut Transform, Option<&CameraTurn>),
-        (With<Camera3d>, Without<Player>, Without<Arrow>),
+        (With<CameraRig>, Without<Player>, Without<Arrow>),
     >,
     mut turn_counter: ResMut<TurnCounter>,
     mut completed_turn_sender: MessageWriter<CompletedTurn>,
@@ -312,6 +307,13 @@ fn rotate_camera_around_y(
 ) {
     let sign = if is_positive { 1.0 } else { -1.0 };
     let rotation = Quat::from_rotation_y(progress.min(1.0) * sign * PI / 2.0);
-    transform.translation = turn.pivot + rotation * (turn.initial_translation - turn.pivot);
     transform.rotation = rotation * turn.initial_rotation;
+}
+
+fn follow_camera(
+    player: Single<&Transform, (With<Player>, Without<CameraRig>)>,
+    mut camera: Single<&mut Transform, (With<CameraRig>, Without<Player>)>,
+) {
+    camera.translation.x = player.translation.x;
+    camera.translation.z = player.translation.z;
 }

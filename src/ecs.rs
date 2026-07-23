@@ -13,6 +13,8 @@ pub struct TurnCountText;
 pub struct Player;
 #[derive(Component, Clone, Default, Debug)]
 pub struct Arrow;
+#[derive(Component, Clone, Default, Debug)]
+pub struct CameraRig;
 
 #[derive(Component, Clone, Default, Debug)]
 pub struct GridLocation(pub Vec3);
