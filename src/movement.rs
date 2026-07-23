@@ -89,6 +89,30 @@ fn input(
             initial_rotation: transform.rotation,
         });
     }
+    if keys.just_pressed(KeyCode::KeyZ) {
+        // slide left (translate, no roll)
+        commands.entity(player_entity).insert(Moving {
+            direction: Direction::SlideLeft,
+            start: Instant::now(),
+            initial_rotation: transform.rotation,
+        });
+    }
+    if keys.just_pressed(KeyCode::KeyC) {
+        // slide right
+        commands.entity(player_entity).insert(Moving {
+            direction: Direction::SlideRight,
+            start: Instant::now(),
+            initial_rotation: transform.rotation,
+        });
+    }
+    if keys.just_pressed(KeyCode::Space) {
+        // wait in place (pass turn)
+        commands.entity(player_entity).insert(Moving {
+            direction: Direction::Wait,
+            start: Instant::now(),
+            initial_rotation: transform.rotation,
+        });
+    }
 }
 fn do_movement(
     player: Single<
@@ -270,7 +294,59 @@ fn do_movement(
                 completed_turn_sender.write(CompletedTurn);
             }
         }
+        Direction::SlideLeft => {
+            let target = slide_to(
+                &mut transform,
+                &grid_location,
+                orient_rot * vec3(-1.0, 0.0, 0.0),
+                progress,
+            );
+            if progress >= 1.0 {
+                grid_location.0 = target;
+                commands.entity(player_entity).remove::<Moving>();
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
+            }
+        }
+        Direction::SlideRight => {
+            let target = slide_to(
+                &mut transform,
+                &grid_location,
+                orient_rot * vec3(1.0, 0.0, 0.0),
+                progress,
+            );
+            if progress >= 1.0 {
+                grid_location.0 = target;
+                commands.entity(player_entity).remove::<Moving>();
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
+            }
+        }
+        Direction::Wait => {
+            if progress >= 1.0 {
+                commands.entity(player_entity).remove::<Moving>();
+
+                **turn_counter -= 1;
+                completed_turn_sender.write(CompletedTurn);
+            }
+        }
     }
+}
+
+fn slide_to(
+    transform: &mut Transform,
+    grid_location: &GridLocation,
+    offset: Vec3,
+    progress: f32,
+) -> Vec3 {
+    let target_grid_location = grid_location.0 + offset;
+    let player_offset = vec3(0.0, PLAYER_SIZE.y / 2.0, 0.0);
+    let start = grid_location.to_world_space() + player_offset;
+    let target = GridLocation(target_grid_location).to_world_space() + player_offset;
+    transform.translation = start.lerp(target, progress.min(1.0));
+    target_grid_location
 }
 
 fn rotate_around(

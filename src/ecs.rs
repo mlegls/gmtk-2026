@@ -1,7 +1,6 @@
 use std::f32::consts::PI;
 use std::time::Instant;
 use bevy::prelude::*;
-use crate::ecs::Direction::Around;
 use crate::{GRID_SIZE, PLAYER_SIZE};
 
 #[derive(Resource, Clone, Debug, Deref, DerefMut)]
@@ -47,6 +46,9 @@ pub enum Direction {
     Left,
     Right,
     Around,
+    SlideLeft,
+    SlideRight,
+    Wait,
 }
 impl Direction {
     pub fn turn_left(self) -> Direction {
@@ -58,6 +60,9 @@ impl Direction {
             Direction::Left => Direction::Around, // the last 3 should never be called, but i cant be bothered to make sure they aren't
             Direction::Right => Direction::Around,
             Direction::Around => Direction::Left,
+            Direction::SlideLeft => Direction::SlideLeft,
+            Direction::SlideRight => Direction::SlideRight,
+            Direction::Wait => Direction::Wait,
         }
     }
     pub fn turn_right(self) -> Direction {
@@ -69,6 +74,9 @@ impl Direction {
             Direction::Left => Direction::Around, // the last 3 should never be called, but i cant be bothered to make sure they aren't
             Direction::Right => Direction::Around,
             Direction::Around => Direction::Right,
+            Direction::SlideLeft => Direction::SlideLeft,
+            Direction::SlideRight => Direction::SlideRight,
+            Direction::Wait => Direction::Wait,
         }
     }
     pub fn to_rotation(self) -> Quat {
@@ -80,6 +88,9 @@ impl Direction {
             Direction::Left => { error!("Left does not have a rotation"); Quat::from_rotation_y(0.0) },
             Direction::Right => { error!("Right does not have a rotation"); Quat::from_rotation_y(0.0) },
             Direction::Around => { error!("Around does not have a rotation"); Quat::from_rotation_y(0.0) },
+            Direction::SlideLeft => { error!("SlideLeft does not have a rotation"); Quat::IDENTITY },
+            Direction::SlideRight => { error!("SlideRight does not have a rotation"); Quat::IDENTITY },
+            Direction::Wait => { error!("Wait does not have a rotation"); Quat::IDENTITY },
         }
     }
     pub fn to_pivot(&self) -> Vec3 {
@@ -91,6 +102,9 @@ impl Direction {
             Direction::Left => vec3(0.0, 0.0, 0.0),
             Direction::Right => vec3(0.0, 0.0, 0.0),
             Direction::Around => vec3(0.0, 0.0, 0.0),
+            Direction::SlideLeft => vec3(0.0, 0.0, 0.0),
+            Direction::SlideRight => vec3(0.0, 0.0, 0.0),
+            Direction::Wait => vec3(0.0, 0.0, 0.0),
         }
     }
 }

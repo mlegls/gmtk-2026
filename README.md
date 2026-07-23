@@ -6,7 +6,8 @@ The map is an isometric 2.5d grid. Time is in turns - your move is what advances
 
 - wasd - roll left/right/forward/back
 - q/e/x - turn left/right/around
-- z/c/space - idk yet
+- z/c - slide left/right
+- space - wait in place
 
 The world is arranged with 10 nodes, like the [tree of life](https://en.wikipedia.org/wiki/Sefirot). In each node there's an altar to sacrifice one of your buttons. The world is semi-open, but some regions are inaccessible without certain buttons. There's also a "true ending" you can only get to by sacrificing your buttons in a particular order - roughly the most useful first (the canonical reverse of the tree of life's "emanation" order, symbolizing a reverse cosmogenesis).
 
