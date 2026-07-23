@@ -130,6 +130,10 @@ fn input(
             start: Instant::now(),
             initial_rotation: transform.rotation,
         });
+        // orbit camera
+        commands.entity(camera_entity).insert(CameraTurn {
+            initial_rotation: camera_transform.rotation,
+        });
     }
     if action_just_pressed(&keys, available_actions, PlayerAction::SlideLeft) {
         // slide left (translate, no roll)
@@ -274,6 +278,12 @@ fn do_movement(
             };
             rotate_camera_around_y(&mut camera_transform, camera_turn, progress, true);
             rotate_around_y(
+                &mut transform,
+                &moving.initial_rotation,
+                progress,
+                true,
+            );
+            rotate_around_y(
                 &mut arrow_transform,
                 &orientation.0.to_rotation(),
                 progress,
@@ -282,6 +292,7 @@ fn do_movement(
             if progress >= 1.0 {
                 commands.entity(player_entity).remove::<Moving>();
                 commands.entity(camera_entity).remove::<CameraTurn>();
+                transform.rotation = Quat::from_axis_angle(Vec3::Y, PI/2.0) * moving.initial_rotation;
 
                 *orientation = Orientation(orientation.0.turn_left());
                 arrow_transform.rotation = orientation.0.to_rotation();
@@ -296,6 +307,12 @@ fn do_movement(
             };
             rotate_camera_around_y(&mut camera_transform, camera_turn, progress, false);
             rotate_around_y(
+                &mut transform,
+                &moving.initial_rotation,
+                progress,
+                false,
+            );
+            rotate_around_y(
                 &mut arrow_transform,
                 &orientation.0.to_rotation(),
                 progress,
@@ -304,6 +321,7 @@ fn do_movement(
             if progress >= 1.0 {
                 commands.entity(player_entity).remove::<Moving>();
                 commands.entity(camera_entity).remove::<CameraTurn>();
+                transform.rotation = Quat::from_axis_angle(Vec3::Y, -PI/2.0) * moving.initial_rotation;
 
                 *orientation = Orientation(orientation.0.turn_right());
                 arrow_transform.rotation = orientation.0.to_rotation();
@@ -313,6 +331,10 @@ fn do_movement(
             }
         }
         Direction::Around => {
+            let Some(camera_turn) = camera_turn else {
+                return;
+            };
+            rotate_camera_around_y(&mut camera_transform, camera_turn, progress * 2.0, false);
             rotate_around_y(
                 &mut transform,
                 &moving.initial_rotation,
@@ -327,6 +349,7 @@ fn do_movement(
             );
             if progress >= 1.0 {
                 commands.entity(player_entity).remove::<Moving>();
+                commands.entity(camera_entity).remove::<CameraTurn>();
                 transform.rotation = Quat::from_axis_angle(Vec3::Y, PI) * moving.initial_rotation;
 
                 *orientation = Orientation(orientation.0.turn_left().turn_left());
@@ -424,7 +447,7 @@ fn rotate_camera_around_y(
     is_positive: bool,
 ) {
     let sign = if is_positive { 1.0 } else { -1.0 };
-    let rotation = Quat::from_rotation_y(progress.min(1.0) * sign * PI / 2.0);
+    let rotation = Quat::from_rotation_y(progress.min(2.0) * sign * PI / 2.0);
     transform.rotation = rotation * turn.initial_rotation;
 }
 
