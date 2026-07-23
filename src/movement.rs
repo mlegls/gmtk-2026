@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 use std::time::Instant;
 use bevy::prelude::*;
-use crate::ecs::{Direction, GridLocation, Moving, Player};
+use crate::ecs::{Arrow, Direction, GridLocation, Moving, Orientation, Player};
 use crate::{ANIMATION_LENGTH, PLAYER_SIZE};
 
 pub fn movement_plugin(app: &mut App) {
@@ -11,7 +11,7 @@ pub fn movement_plugin(app: &mut App) {
 }
 
 fn input(
-    mut player: Single<(Entity, &Transform), (With<Player>, Without<Moving>)>,
+    player: Single<(Entity, &Transform), (With<Player>, Without<Moving>)>,
     keys: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
 ) {
@@ -48,65 +48,124 @@ fn input(
             initial_rotation: transform.rotation,
         });
     }
+    if keys.just_pressed(KeyCode::KeyQ) {
+        // spin left
+        commands.entity(player_entity).insert(Moving {
+            direction: Direction::Left,
+            start: Instant::now(),
+            initial_rotation: transform.rotation,
+        });
+    }
+    if keys.just_pressed(KeyCode::KeyE) {
+        // spin right
+        commands.entity(player_entity).insert(Moving {
+            direction: Direction::Right,
+            start: Instant::now(),
+            initial_rotation: transform.rotation,
+        });
+    }
+    if keys.just_pressed(KeyCode::KeyX) {
+        // spin 180 degrees
+        commands.entity(player_entity).insert(Moving {
+            direction: Direction::Around,
+            start: Instant::now(),
+            initial_rotation: transform.rotation,
+        });
+    }
 }
 fn do_movement(
-    mut player: Single<(Entity, &mut Transform, &mut GridLocation, &Moving), With<Player>>,
+    mut player: Single<(Entity, &mut Transform, &mut GridLocation, &Moving, &mut Orientation), With<Player>>,
+    mut arrow: Single<(&mut Transform), (With<Arrow>, Without<Player>)>,
     mut commands: Commands,
 ) {
-    let (player_entity, mut transform, mut grid_location, moving) = player.into_inner();
+    let (player_entity, mut transform, mut grid_location, moving, mut orientation) = player.into_inner();
+    let (mut arrow_transform) = arrow.into_inner();
     let progress = moving.start.elapsed().as_secs_f32() / ANIMATION_LENGTH;
 
+    let orient_rot = orientation.0.to_rotation();
     match moving.direction {
         Direction::North => {
-            rotate_around_x(&mut transform, &moving.initial_rotation, &grid_location, progress, false);
+            // rotates about x axis
+            rotate_around(&mut transform, &moving.initial_rotation, orient_rot * moving.direction.to_pivot(), &Quat::from_axis_angle(orient_rot * Vec3::X, progress * -PI / 2.0), &grid_location);
             if progress >= 1.0 {
-                grid_location.move_north();
+                grid_location.0 += orient_rot * vec3(0.0, 0.0, -1.0);
                 commands.entity(player_entity).remove::<Moving>();
                 transform.translation = grid_location.to_world_space() + vec3(0.0, PLAYER_SIZE.y/2.0, 0.0);
-                transform.rotation = Quat::from_axis_angle(Vec3::X, -PI/2.0) * moving.initial_rotation;
+                transform.rotation = Quat::from_axis_angle(orient_rot * Vec3::X, -PI/2.0) * moving.initial_rotation;
             }
         }
         Direction::South => {
-            rotate_around_x(&mut transform, &moving.initial_rotation, &grid_location, progress, true);
+            rotate_around(&mut transform, &moving.initial_rotation, orient_rot * moving.direction.to_pivot(), &Quat::from_axis_angle(orient_rot * Vec3::X, progress * PI/2.0), &grid_location);
             if progress >= 1.0 {
-                grid_location.move_south();
+                grid_location.0 += orient_rot * vec3(0.0, 0.0, 1.0);
                 commands.entity(player_entity).remove::<Moving>();
                 transform.translation = grid_location.to_world_space() + vec3(0.0, PLAYER_SIZE.y/2.0, 0.0);
-                transform.rotation = Quat::from_axis_angle(Vec3::X, PI/2.0) * moving.initial_rotation;
+                transform.rotation = Quat::from_axis_angle(orient_rot * Vec3::X, PI/2.0) * moving.initial_rotation;
             }
         }
         Direction::East => {
-            rotate_around_z(&mut transform, &moving.initial_rotation, &grid_location, progress, true);
+            rotate_around(&mut transform, &moving.initial_rotation, orient_rot * moving.direction.to_pivot(), &Quat::from_axis_angle(orient_rot * Vec3::Z, progress * -PI / 2.0), &grid_location);
             if progress >= 1.0 {
-                grid_location.move_east();
+                grid_location.0 += orient_rot * vec3(1.0, 0.0, 0.0);
                 commands.entity(player_entity).remove::<Moving>();
                 transform.translation = grid_location.to_world_space() + vec3(0.0, PLAYER_SIZE.y/2.0, 0.0);
-                transform.rotation = Quat::from_axis_angle(Vec3::Z, -PI/2.0) * moving.initial_rotation;
+                transform.rotation = Quat::from_axis_angle(orient_rot * Vec3::Z, -PI/2.0) * moving.initial_rotation;
             }
         }
         Direction::West => {
-            rotate_around_z(&mut transform, &moving.initial_rotation, &grid_location, progress, false);
+            rotate_around(&mut transform, &moving.initial_rotation, orient_rot * moving.direction.to_pivot(), &Quat::from_axis_angle(orient_rot * Vec3::Z, progress * PI / 2.0), &grid_location);
             if progress >= 1.0 {
-                grid_location.move_west();
+                grid_location.0 += orient_rot * vec3(-1.0, 0.0, 0.0);
                 commands.entity(player_entity).remove::<Moving>();
                 transform.translation = grid_location.to_world_space() + vec3(0.0, PLAYER_SIZE.y/2.0, 0.0);
-                transform.rotation = Quat::from_axis_angle(Vec3::Z, PI/2.0) * moving.initial_rotation;
+                transform.rotation = Quat::from_axis_angle(orient_rot * Vec3::Z, PI/2.0) * moving.initial_rotation;
+            }
+        }
+        Direction::Left => {
+            rotate_around_y(&mut transform, &moving.initial_rotation, progress, true);
+            rotate_around_y(&mut arrow_transform, &orientation.0.to_rotation(), progress, true);
+            if progress >= 1.0 {
+                commands.entity(player_entity).remove::<Moving>();
+                transform.rotation = Quat::from_axis_angle(Vec3::Y, PI/2.0) * moving.initial_rotation;
+
+                *orientation = Orientation(orientation.0.turn_left());
+                arrow_transform.rotation = orientation.0.to_rotation();
+            }
+        }
+        Direction::Right => {
+            rotate_around_y(&mut transform, &moving.initial_rotation, progress, false);
+            rotate_around_y(&mut arrow_transform, &orientation.0.to_rotation(), progress, false);
+            if progress >= 1.0 {
+                commands.entity(player_entity).remove::<Moving>();
+                transform.rotation = Quat::from_axis_angle(Vec3::Y, -PI/2.0) * moving.initial_rotation;
+
+                *orientation = Orientation(orientation.0.turn_right());
+                arrow_transform.rotation = orientation.0.to_rotation();
+            }
+        }
+        Direction::Around => {
+            rotate_around_y(&mut transform, &moving.initial_rotation, progress*2.0, false);
+            rotate_around_y(&mut arrow_transform, &orientation.0.to_rotation(), progress*2.0, false);
+            if progress >= 1.0 {
+                commands.entity(player_entity).remove::<Moving>();
+                transform.rotation = Quat::from_axis_angle(Vec3::Y, PI) * moving.initial_rotation;
+
+                *orientation = Orientation(orientation.0.turn_left().turn_left());
+                arrow_transform.rotation = orientation.0.to_rotation();
             }
         }
     }
 }
 
-fn rotate_around_z(transform: &mut Transform, initial_rotation: &Quat, grid_location: &GridLocation, progress: f32, is_positive: bool) {
-    let sign = if is_positive { 1.0 } else { -1.0 };
-    let pivot_point = grid_location.to_world_space() + vec3(sign*PLAYER_SIZE.x/2.0, 0.0, 0.0);
+fn rotate_around(transform: &mut Transform, initial_rotation: &Quat, offset: Vec3, rotation_offset: &Quat, grid_location: &GridLocation) {
+    let pivot_point = grid_location.to_world_space() + offset;
     //transform.rotate_around(grid_location.to_world_space() + vec3(sign*PLAYER_SIZE.x/2.0, 0.0, 0.0), Quat::from_rotation_z(time.delta_secs()/ANIMATION_LENGTH * -sign));
-    transform.translation = pivot_point + Quat::from_rotation_z(progress * -sign*PI/2.0)*(grid_location.to_world_space()+vec3(0.0, PLAYER_SIZE.y/2.0, 0.0) - pivot_point);
-    transform.rotation = Quat::from_rotation_z(progress * -sign*PI/2.0) * initial_rotation;
+    transform.translation = pivot_point + rotation_offset*(grid_location.to_world_space()+vec3(0.0, PLAYER_SIZE.y/2.0, 0.0) - pivot_point);
+    transform.rotation = rotation_offset * initial_rotation;
 }
-fn rotate_around_x(transform: &mut Transform, initial_rotation: &Quat, grid_location: &GridLocation, progress: f32, is_positive: bool) {
+fn rotate_around_y(transform: &mut Transform, initial_rotation: &Quat, progress: f32, is_positive: bool) {
     let sign = if is_positive { 1.0 } else { -1.0 };
-    let pivot_point = grid_location.to_world_space() + vec3(0.0, 0.0, sign*PLAYER_SIZE.z/2.0);
+    //let pivot_point = grid_location.to_world_space();
     //transform.rotate_around(grid_location.to_world_space() + vec3(0.0, 0.0, sign*PLAYER_SIZE.z/2.0), Quat::from_rotation_x(time.delta_secs()/ANIMATION_LENGTH * sign));
-    transform.translation = pivot_point + Quat::from_rotation_x(progress * sign*PI/2.0)*(grid_location.to_world_space()+vec3(0.0, PLAYER_SIZE.y/2.0, 0.0) - pivot_point);
-    transform.rotation = Quat::from_rotation_x(progress * sign*PI/2.0) * initial_rotation;
+    transform.rotation = Quat::from_rotation_y(progress * sign*PI/2.0) * initial_rotation;
 }

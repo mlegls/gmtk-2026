@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
-use crate::ecs::{GridLocation, Player};
+use crate::ecs::{Arrow, Direction, GridLocation, Orientation, Player};
 use crate::PLAYER_SIZE;
 
 pub fn game_scene_plugin(app: &mut App) {
@@ -9,12 +9,16 @@ pub fn game_scene_plugin(app: &mut App) {
 }
 
 fn scene() -> impl SceneList {
-    bsn_list![isometric_camera(), point_light(),
+    bsn_list![
+        isometric_camera(), point_light(),
         (
             cube()
             Player
+            Orientation(Direction::North)
         ),
-        ground()]
+        arrow(),
+        ground()
+    ]
 }
 
 fn isometric_camera() -> impl Scene {
@@ -49,7 +53,7 @@ fn cube() -> impl Scene {
         Mesh3d(asset_value(Cuboid::from_size(PLAYER_SIZE)))
         MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(124, 144, 255)))
         Transform::from_xyz(0.0, 0.5, 0.0)
-        GridLocation(Vec2::new(0.0, 0.0))
+        GridLocation(Vec3::new(0.0, 0.0, 0.0))
         Children [
             (
                 Mesh3d(asset_value(Cuboid::new(0.2, 0.2, 0.2)))
@@ -65,6 +69,25 @@ fn cube() -> impl Scene {
                 Mesh3d(asset_value(Cuboid::new(0.2, 0.2, 0.2)))
                 MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(255, 255, 255)))
                 Transform::from_xyz(0.0, 0.0, PLAYER_SIZE.z/2.0)
+            )
+        ]
+    }
+}
+
+fn arrow() -> impl Scene {
+    bsn! {
+        Mesh3d(asset_value(Cuboid::new(0.1, 0.1, 0.4)))
+        MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(255, 255, 0)))
+        Transform::from_xyz(0.0, 1.5, 0.0)
+        Arrow
+        Children [
+            (
+                Mesh3d(asset_value(Cone::new(0.2, 0.6)))
+                MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(255, 255, 0)))
+                Transform {
+                    translation: vec3(0.0, 0.0, -0.5),
+                    rotation: Quat::from_rotation_x(-PI/2.0),
+                }
             )
         ]
     }
