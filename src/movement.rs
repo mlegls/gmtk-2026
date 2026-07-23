@@ -309,6 +309,7 @@ fn do_movement(
                 commands.entity(player_entity).remove::<Moving>();
                 commands.entity(camera_entity).remove::<CameraTurn>();
                 transform.rotation = Quat::from_axis_angle(Vec3::Y, PI/2.0) * moving.initial_rotation;
+                camera_transform.rotation = Quat::from_axis_angle(Vec3::Y, PI/2.0) * camera_turn.initial_rotation;
 
                 *orientation = Orientation(orientation.0.turn_left());
                 arrow_transform.rotation = orientation.0.to_rotation();
@@ -338,6 +339,7 @@ fn do_movement(
                 commands.entity(player_entity).remove::<Moving>();
                 commands.entity(camera_entity).remove::<CameraTurn>();
                 transform.rotation = Quat::from_axis_angle(Vec3::Y, -PI/2.0) * moving.initial_rotation;
+                camera_transform.rotation = Quat::from_axis_angle(Vec3::Y, -PI/2.0) * camera_turn.initial_rotation;
 
                 *orientation = Orientation(orientation.0.turn_right());
                 arrow_transform.rotation = orientation.0.to_rotation();
@@ -367,6 +369,7 @@ fn do_movement(
                 commands.entity(player_entity).remove::<Moving>();
                 commands.entity(camera_entity).remove::<CameraTurn>();
                 transform.rotation = Quat::from_axis_angle(Vec3::Y, PI) * moving.initial_rotation;
+                camera_transform.rotation = Quat::from_axis_angle(Vec3::Y, PI) * camera_turn.initial_rotation;
 
                 *orientation = Orientation(orientation.0.turn_left().turn_left());
                 arrow_transform.rotation = orientation.0.to_rotation();
