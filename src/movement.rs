@@ -1,7 +1,4 @@
-use crate::ecs::{
-    Arrow, AvailableActions, CameraRig, CompletedTurn, DebugMode, Direction, GridLocation, Moving,
-    Orientation, Player, PlayerAction, TurnCounter,
-};
+use crate::ecs::{Arrow, AvailableActions, CameraRig, CompletedTurn, DebugMode, Direction, GridLocation, Moving, ObstructedSet, Orientation, Player, PlayerAction, TurnCounter};
 use crate::{ANIMATION_LENGTH, PLAYER_SIZE};
 use bevy::prelude::*;
 use std::f32::consts::PI;
@@ -55,20 +52,24 @@ fn toggle_actions(
 }
 
 fn input(
-    player: Single<(Entity, &Transform, &AvailableActions), (With<Player>, Without<Moving>)>,
+    player: Single<(Entity, &Transform, &AvailableActions, &GridLocation, &Orientation), (With<Player>, Without<Moving>)>,
     camera: Single<(Entity, &Transform), (With<CameraRig>, Without<Player>)>,
     debug_mode: Res<DebugMode>,
     keys: Res<ButtonInput<KeyCode>>,
+    obstructed_set: Res<ObstructedSet>,
     mut commands: Commands,
 ) {
     if **debug_mode && shift_pressed(&keys) {
         return;
     }
 
-    let (player_entity, transform, available_actions) = player.into_inner();
+    let (player_entity, transform, available_actions, grid_location, orientation) = player.into_inner();
     let (camera_entity, camera_transform) = camera.into_inner();
     if action_just_pressed(&keys, available_actions, PlayerAction::RollForward) {
         // roll north 1 space
+        let future_grid_location = grid_location.0 + orientation.0.to_rotation() * Direction::North.to_vec_direction();
+        if obstructed_set.0.get(&future_grid_location.as_uvec3()).is_some() { return }
+
         commands.entity(player_entity).insert(Moving {
             direction: Direction::North,
             start: Instant::now(),
@@ -77,6 +78,9 @@ fn input(
     }
     if action_just_pressed(&keys, available_actions, PlayerAction::RollBackward) {
         // roll south
+        let future_grid_location = grid_location.0 + orientation.0.to_rotation() * Direction::South.to_vec_direction();
+        if obstructed_set.0.get(&future_grid_location.as_uvec3()).is_some() { return }
+
         commands.entity(player_entity).insert(Moving {
             direction: Direction::South,
             start: Instant::now(),
@@ -85,6 +89,9 @@ fn input(
     }
     if action_just_pressed(&keys, available_actions, PlayerAction::RollLeft) {
         // roll west
+        let future_grid_location = grid_location.0 + orientation.0.to_rotation() * Direction::West.to_vec_direction();
+        if obstructed_set.0.get(&future_grid_location.as_uvec3()).is_some() { return }
+
         commands.entity(player_entity).insert(Moving {
             direction: Direction::West,
             start: Instant::now(),
@@ -93,6 +100,9 @@ fn input(
     }
     if action_just_pressed(&keys, available_actions, PlayerAction::RollRight) {
         // roll east
+        let future_grid_location = grid_location.0 + orientation.0.to_rotation() * Direction::East.to_vec_direction();
+        if obstructed_set.0.get(&future_grid_location.as_uvec3()).is_some() { return }
+
         commands.entity(player_entity).insert(Moving {
             direction: Direction::East,
             start: Instant::now(),
@@ -137,6 +147,9 @@ fn input(
     }
     if action_just_pressed(&keys, available_actions, PlayerAction::SlideLeft) {
         // slide left (translate, no roll)
+        let future_grid_location = grid_location.0 + orientation.0.to_rotation() * Direction::West.to_vec_direction();
+        if obstructed_set.0.get(&future_grid_location.as_uvec3()).is_some() { return }
+
         commands.entity(player_entity).insert(Moving {
             direction: Direction::SlideLeft,
             start: Instant::now(),
@@ -145,6 +158,9 @@ fn input(
     }
     if action_just_pressed(&keys, available_actions, PlayerAction::SlideRight) {
         // slide right
+        let future_grid_location = grid_location.0 + orientation.0.to_rotation() * Direction::East.to_vec_direction();
+        if obstructed_set.0.get(&future_grid_location.as_uvec3()).is_some() { return }
+
         commands.entity(player_entity).insert(Moving {
             direction: Direction::SlideRight,
             start: Instant::now(),

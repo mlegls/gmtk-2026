@@ -3,8 +3,6 @@ use crate::ui::ui;
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
 use std::f32::consts::PI;
-use std::slice::Iter;
-use bevy::reflect::array::Array;
 use crate::{GRID_SIZE, GROUND_LEVEL};
 
 pub fn game_scene_plugin(app: &mut App) {
@@ -99,7 +97,7 @@ fn generate_map(
     for (i, row) in GROUND_LEVEL.into_iter().enumerate() {
         for (j, location) in row.into_iter().enumerate() {
             if location == 0 {
-                obstructed_set.0.insert(uvec3(i as u32, 0, j as u32));
+                obstructed_set.0.insert(uvec3(i as u32 + 1, 0, j as u32 + 1));
             }
             if location == 1 {
                 commands.spawn_scene(bsn! {

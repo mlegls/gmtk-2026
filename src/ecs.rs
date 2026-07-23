@@ -198,4 +198,13 @@ impl Direction {
             Direction::Wait => vec3(0.0, 0.0, 0.0),
         }
     }
+    pub fn to_vec_direction(&self) -> Vec3 {
+        match self {
+            Direction::North => -Vec3::Z,
+            Direction::West => -Vec3::X,
+            Direction::South => Vec3::Z,
+            Direction::East => Vec3::X,
+            _ => { error!("Only the cardinal directions have a vec direction"); Vec3::ZERO }
+        }
+    }
 }
