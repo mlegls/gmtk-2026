@@ -1,3 +1,4 @@
+use std::time::Instant;
 use bevy::prelude::*;
 use crate::GRID_SIZE;
 
@@ -24,4 +25,20 @@ impl GridLocation {
     pub fn move_east(&mut self) {
         self.0.x += 1.0;
     }
+}
+
+#[derive(Component, Clone, Debug)]
+pub struct Moving {
+    pub direction: Direction,
+    pub start: Instant,
+    pub initial_rotation: Quat,
+}
+
+#[derive(Clone, Default, Debug)]
+pub enum Direction {
+    #[default]
+    North,
+    East,
+    South,
+    West,
 }
