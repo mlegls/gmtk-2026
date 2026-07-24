@@ -154,7 +154,12 @@ fn generate_map(
                         BridgeSegment::TopEnd => {
                             commands.spawn_scene(bridge_end(location, Quat::from_rotation_y(-PI/2.0)));
                         }
-                        _ => {}
+                        BridgeSegment::LeftEnd => {
+                            commands.spawn_scene(bridge_end(location, Quat::from_rotation_y(0.0)));
+                        }
+                        BridgeSegment::RightEnd => {
+                            commands.spawn_scene(bridge_end(location, Quat::from_rotation_y(PI)));
+                        }
                     }
                 }
             }
