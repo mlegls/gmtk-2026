@@ -30,6 +30,7 @@ fn load_layer(bytes: &[u8], layer: &'static str) -> Result<MapLayer, eyre::Error
         output[x as usize][y as usize] = match pixel.0 {
             [_, _, _, 0] => 0, // void
             [255, 255, 255, 255] => 1, // ground
+            [255, 0, 0, 255] => 2, // pressure plate
             [154, 114, 46, 255] => 3, // bridge
             rgba => {
                 return Err(eyre!("invalid pixel: {x} {y} {rgba:?}"))
