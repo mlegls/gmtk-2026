@@ -6,3 +6,5 @@ edition = "2024"
 [dependencies]
 bevy = "0.19.0"
 pastey = "0.2.3"
+eyre = "0.6.12"
+image = { version = "0.25", default-features = false, features = ["png"] }
