@@ -1,7 +1,4 @@
 use crate::ecs::{Arrow, AvailableActions, CameraRig, Direction, GridLocation, ObstructedSet, Orientation, Player, PressurePlate, SpecialTileSet, SpecialTileType};
-use crate::ecs::{
-    Arrow, AvailableActions, CameraRig, Direction, GridLocation, ObstructedSet, Orientation, Player,
-};
 use crate::ui::ui;
 use crate::{GRID_SIZE, map_loader::WorldMap};
 use bevy::camera::ScalingMode;

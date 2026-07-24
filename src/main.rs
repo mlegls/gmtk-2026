@@ -8,14 +8,12 @@ pub mod pressure_plate;
 
 use std::collections::{HashMap, HashSet};
 use crate::ecs::{register_messages, CompletedTurn, DebugMode, ObstructedSet, SpecialTileSet, TurnCounter};
-use crate::ecs::{CompletedTurn, DebugMode, ObstructedSet, TurnCounter};
 use crate::game_scene::game_scene_plugin;
 use crate::map_loader::load_world_map;
 use crate::movement::movement_plugin;
 use crate::ui::ui_plugin;
 use bevy::prelude::*;
 use crate::pressure_plate::pressure_plate_plugin;
-use std::collections::HashSet;
 
 pub const MAX_TURN_COUNT: u32 = 1000;
 
