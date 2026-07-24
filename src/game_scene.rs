@@ -1,9 +1,11 @@
-use crate::ecs::{Arrow, AvailableActions, CameraRig, Direction, GridLocation, ObstructedSet, Orientation, Player};
+use crate::ecs::{
+    Arrow, AvailableActions, CameraRig, Direction, GridLocation, ObstructedSet, Orientation, Player,
+};
 use crate::ui::ui;
+use crate::{GRID_SIZE, map_loader::WorldMap};
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
 use std::f32::consts::PI;
-use crate::{GRID_SIZE, GROUND_LEVEL};
 
 pub fn game_scene_plugin(app: &mut App) {
     app.add_systems(Startup, scene.spawn())
@@ -93,11 +95,14 @@ fn arrow() -> impl Scene {
 fn generate_map(
     mut commands: Commands,
     mut obstructed_set: ResMut<ObstructedSet>,
+    world_map: Res<WorldMap>,
 ) {
-    for (i, row) in GROUND_LEVEL.into_iter().enumerate() {
-        for (j, location) in row.into_iter().enumerate() {
+    for (i, row) in world_map.ground.iter().enumerate() {
+        for (j, &location) in row.iter().enumerate() {
             if location == 0 {
-                obstructed_set.0.insert(uvec3(i as u32 + 1, 0, j as u32 + 1));
+                obstructed_set
+                    .0
+                    .insert(uvec3(i as u32 + 1, 0, j as u32 + 1));
             }
             if location == 1 {
                 commands.spawn_scene(bsn! {
