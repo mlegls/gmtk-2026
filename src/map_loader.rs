@@ -28,8 +28,9 @@ fn load_layer(bytes: &[u8], layer: &'static str) -> Result<MapLayer, eyre::Error
     let mut output = [[0; MAP_HEIGHT]; MAP_WIDTH];
     for (x, y, pixel) in image.enumerate_pixels() {
         output[x as usize][y as usize] = match pixel.0 {
-            [_, _, _, 0] => 0,
-            [255, 255, 255, 255] => 1,
+            [_, _, _, 0] => 0, // void
+            [255, 255, 255, 255] => 1, // ground
+            [154, 114, 46, 255] => 3, // bridge
             rgba => {
                 return Err(eyre!("invalid pixel: {x} {y} {rgba:?}"))
             }
