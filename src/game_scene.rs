@@ -1,4 +1,4 @@
-use crate::ecs::{Arrow, AvailableActions, CameraRig, Direction, GridLocation, ObstructedSet, Orientation, Player};
+use crate::ecs::{Arrow, AvailableActions, CameraRig, Direction, GridLocation, ObstructedSet, Orientation, Player, PressurePlate, SpecialTileSet, SpecialTileType};
 use crate::ui::ui;
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
@@ -93,6 +93,7 @@ fn arrow() -> impl Scene {
 fn generate_map(
     mut commands: Commands,
     mut obstructed_set: ResMut<ObstructedSet>,
+    mut special_tile_set: ResMut<SpecialTileSet>,
 ) {
     for (i, row) in GROUND_LEVEL.into_iter().enumerate() {
         for (j, location) in row.into_iter().enumerate() {
@@ -105,6 +106,16 @@ fn generate_map(
                     MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(255, 255, 255)))
                     Transform::from_xyz((i as f32 + 1.0) * GRID_SIZE.x, -5.0, (j as f32 + 1.0) * GRID_SIZE.y)
                 });
+            }
+            if location == 2 {
+                let entity = commands.spawn_scene(bsn! {
+                    Mesh3d(asset_value(Cuboid::new(1.0, 10.0, 1.0)))
+                    MeshMaterial3d::<StandardMaterial>(asset_value(Color::srgb_u8(255, 100, 100)))
+                    Transform::from_xyz((i as f32 + 1.0) * GRID_SIZE.x, -5.0, (j as f32 + 1.0) * GRID_SIZE.y)
+                    PressurePlate
+                });
+                special_tile_set.0.insert(uvec3(i as u32 + 1, 0, j as u32 + 1),
+                                          (SpecialTileType::PressurePlate, entity.id()));
             }
             /*bsn! {
                 Mesh3d(asset_value(Cuboid::new(1.0, 10.0, 1.0)))

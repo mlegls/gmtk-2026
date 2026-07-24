@@ -2760,6 +2760,7 @@ name = "gmtk-2026"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "pastey",
 ]
 
 [[package]]
@@ -4013,6 +4014,12 @@ checksum = "19ab9ace3fad1b9ed603ddac5b595e69931fc50263d7e04e4055015b77b02da5"
 dependencies = [
  "icu_properties",
 ]
+
+[[package]]
+name = "pastey"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ee67f1008b1ba2321834326597b8e186293b049a023cdef258527550b9935b4"
 
 [[package]]
 name = "percent-encoding"

@@ -2,13 +2,16 @@ pub mod ecs;
 mod game_scene;
 pub mod movement;
 pub mod ui;
+pub mod macros;
+pub mod pressure_plate;
 
 use std::collections::{HashMap, HashSet};
-use crate::ecs::{CompletedTurn, DebugMode, ObstructedSet, TurnCounter};
+use crate::ecs::{register_messages, CompletedTurn, DebugMode, ObstructedSet, SpecialTileSet, TurnCounter};
 use crate::game_scene::game_scene_plugin;
 use crate::movement::movement_plugin;
 use crate::ui::ui_plugin;
 use bevy::prelude::*;
+use crate::pressure_plate::pressure_plate_plugin;
 
 pub const MAX_TURN_COUNT: u32 = 1000;
 
@@ -31,7 +34,7 @@ pub const GROUND_LEVEL: [[u32; 32]; 32] =
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -97,9 +100,12 @@ fn main() {
         .insert_resource(DebugMode(debug_mode))
         .insert_resource(TurnCounter(MAX_TURN_COUNT))
         .insert_resource(ObstructedSet(HashSet::new()))
+        .insert_resource(SpecialTileSet(HashMap::new()))
         .add_message::<CompletedTurn>()
+        .add_plugins(register_messages)
         .add_plugins(game_scene_plugin)
         .add_plugins(movement_plugin)
         .add_plugins(ui_plugin)
+        .add_plugins(pressure_plate_plugin)
         .run();
 }
