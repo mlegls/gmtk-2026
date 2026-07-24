@@ -5,7 +5,7 @@ use crate::{GRID_SIZE, map_loader::WorldMap};
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
 use std::f32::consts::PI;
-use crate::map_loader::{MapLayer, MAP_HEIGHT, MAP_WIDTH};
+use crate::map_loader::MapLayer;
 
 pub fn game_scene_plugin(app: &mut App) {
     app.add_systems(Startup, scene.spawn())
@@ -148,6 +148,12 @@ fn generate_map(
                             commands.spawn_scene(bridge_middle(location, Quat::from_rotation_y(PI/2.0)));
                             obstructed_set.0.remove(&uvec3(location.x, 0, location.y));
                         }
+                        BridgeSegment::BottomEnd => {
+                            commands.spawn_scene(bridge_end(location, Quat::from_rotation_y(PI/2.0)));
+                        }
+                        BridgeSegment::TopEnd => {
+                            commands.spawn_scene(bridge_end(location, Quat::from_rotation_y(-PI/2.0)));
+                        }
                         _ => {}
                     }
                 }
@@ -160,6 +166,19 @@ fn bridge_middle(grid_location: UVec2, rotation: Quat) -> impl Scene {
         template(|ctx| {
             Ok(WorldAssetRoot(ctx.resource::<AssetServer>().load(
                 GltfAssetLabel::Scene(0).from_asset("models/bridge/bridge_body.gltf")
+            )))
+        })
+        Transform {
+            translation: vec3(grid_location.x as f32 * GRID_SIZE.x, 0.0, grid_location.y as f32 * GRID_SIZE.y),
+            rotation,
+        }
+    }
+}
+fn bridge_end(grid_location: UVec2, rotation: Quat) -> impl Scene {
+    bsn! {
+        template(|ctx| {
+            Ok(WorldAssetRoot(ctx.resource::<AssetServer>().load(
+                GltfAssetLabel::Scene(0).from_asset("models/bridge/bridge_pillars_a.gltf")
             )))
         })
         Transform {
