@@ -60,7 +60,7 @@ pub fn conveyor_belt_move(
                     belt_orientation.0.to_grid_location_offset(),
                     1.0,
                 );
-                play_sfx.write(PlaySfx(Sfx::Conveyor));
+                play_sfx.write(PlaySfx::at(Sfx::Conveyor, belt_location));
                 break;
             }
         }

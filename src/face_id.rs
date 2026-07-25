@@ -84,8 +84,13 @@ fn update_switches(
     let snapshot = SignalSnapshot::capture(&switches, &timers);
     let active_trigger = detected_position
         .filter(|position| activation_at(&world_map, *position, &snapshot).unwrap_or(true));
-    if active_trigger.is_some() && active_trigger != active_face_id.0 {
-        play_sfx.write(PlaySfx(Sfx::Success));
+    if let Some(position) = active_trigger
+        && active_trigger != active_face_id.0
+    {
+        play_sfx.write(PlaySfx::at(
+            Sfx::Success,
+            &GridLocation(vec3(position.x as f32, 0.0, position.y as f32)),
+        ));
     }
     active_face_id.0 = active_trigger;
 

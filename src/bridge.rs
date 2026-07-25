@@ -325,7 +325,8 @@ fn begin_collapse(
 ) {
     let snapshot = SignalSnapshot::capture(&switches, &timers);
     let player_location = player.2.0.as_uvec3();
-    let mut collapsed_any = false;
+    let player_position = player.2.to_world_space();
+    let mut closest_collapse = None;
     let mut player_fell = false;
 
     for (mut bridge, mut transform, location) in &mut bridges {
@@ -341,7 +342,13 @@ fn begin_collapse(
 
         if active && !bridge.collapsed {
             bridge.collapsed = true;
-            collapsed_any = true;
+            let collapse_position = location.to_world_space();
+            if closest_collapse.is_none_or(|closest: Vec3| {
+                collapse_position.distance_squared(player_position)
+                    < closest.distance_squared(player_position)
+            }) {
+                closest_collapse = Some(collapse_position);
+            }
             player_fell |= location.0.as_uvec3() == player_location;
             if bridge.blocks_when_collapsed {
                 obstructed_set.0.insert(location.0.as_uvec3());
@@ -377,8 +384,8 @@ fn begin_collapse(
         }
     }
 
-    if collapsed_any {
-        play_sfx.write(PlaySfx(Sfx::BridgeCollapse));
+    if let Some(position) = closest_collapse {
+        play_sfx.write(PlaySfx::at_position(Sfx::BridgeCollapse, position));
     }
 }
 

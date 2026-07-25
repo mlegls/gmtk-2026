@@ -52,7 +52,7 @@ fn signal_check(
             transform.translation.y = 0.0;
         }
         if changed {
-            play_sfx.write(PlaySfx(Sfx::Gate));
+            play_sfx.write(PlaySfx::at(Sfx::Gate, location));
         }
     }
 }

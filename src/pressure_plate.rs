@@ -37,7 +37,7 @@ fn pressure_plate_sfx(
                 .iter()
                 .any(|plate_location| plate_location.0.as_uvec3() == player_location)
         {
-            play_sfx.write(PlaySfx(Sfx::PressurePlate));
+            play_sfx.write(PlaySfx::at(Sfx::PressurePlate, *player));
         }
     }
 }

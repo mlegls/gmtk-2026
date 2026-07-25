@@ -73,10 +73,10 @@ fn toggle_actions(
 }
 
 fn movement_sfx(
-    moving: Query<&Moving, (With<Player>, Added<Moving>)>,
+    moving: Query<(&Moving, &GridLocation), (With<Player>, Added<Moving>)>,
     mut play_sfx: MessageWriter<PlaySfx>,
 ) {
-    for moving in &moving {
+    for (moving, location) in &moving {
         let sfx = match moving.direction {
             Direction::North | Direction::East | Direction::South | Direction::West => {
                 Some(Sfx::Roll)
@@ -87,7 +87,7 @@ fn movement_sfx(
         };
 
         if let Some(sfx) = sfx {
-            play_sfx.write(PlaySfx(sfx));
+            play_sfx.write(PlaySfx::at(sfx, location));
         }
     }
 }
