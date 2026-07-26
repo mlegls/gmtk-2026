@@ -74,7 +74,7 @@ pub fn load_world_map(map_json: &MapJson) -> Result<WorldMap, eyre::Error> {
         },
     );
     tile_mapping.insert(
-        [0, 255, 0, 255],
+        [200, 255, 0, 255],
         MapTile {
             ground: GroundTile::ArrowBlock,
             stuff: StuffTile::None,
