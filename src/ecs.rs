@@ -39,6 +39,8 @@ impl LinearTranslationAnimation {
 
 #[derive(Component, Clone, Default, Debug)]
 pub struct Player;
+#[derive(Component, Clone, Default, Debug)]
+pub struct Background;
 
 #[derive(Serialize, Deserialize, Default, Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum PlayerAction {

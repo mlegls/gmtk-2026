@@ -1,8 +1,5 @@
 use crate::bridge::spawn_bridge_tile;
-use crate::ecs::{
-    Arrow, ArrowBlock, AvailableActions, CameraRig, ConveyorBelt, Direction, FaceId, Gate,
-    GridLocation, InitialObstructedSet, ObstructedSet, Orientation, Player, PressurePlate, WallSet,
-};
+use crate::ecs::{Arrow, ArrowBlock, AvailableActions, Background, CameraRig, ConveyorBelt, Direction, FaceId, Gate, GridLocation, InitialObstructedSet, ObstructedSet, Orientation, Player, PressurePlate, WallSet};
 use crate::map_loader::{GroundTile, StuffTile};
 use crate::signal_logic::TimerBank;
 use crate::ui::ui;
@@ -96,6 +93,7 @@ fn background() -> impl Scene {
             image: "The_City.png",
         }
         Transform::from_scale(Vec3::splat(0.7))
+        Background
     }
 }
 
