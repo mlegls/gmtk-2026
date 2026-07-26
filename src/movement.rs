@@ -2,15 +2,28 @@ use crate::ecs::{
     Arrow, AvailableActions, CameraRig, CompletedTurn, DebugMode, Direction, GateEntrySet,
     GridLocation, Moving, ObstructedSet, Orientation, Player, PlayerAction, TurnCounter, WallSet,
 };
+use crate::map_loader::{MAP_HEIGHT, MAP_WIDTH};
 use crate::sfx::{PlaySfx, Sfx, SfxSystems};
 use crate::story::GamePhase;
 use crate::{ANIMATION_LENGTH, PLAYER_SIZE};
+use bevy::camera::ScalingMode;
 use bevy::prelude::*;
 use std::f32::consts::PI;
 use std::time::Instant;
 
+const VANTAGE_POINT: UVec2 = uvec2(27, 30);
+const NORMAL_VIEW_HEIGHT: f32 = 12.0;
+const OVERVIEW_VIEW_HEIGHT: f32 = MAP_HEIGHT as f32 + 8.0;
+const VANTAGE_TRANSITION_SECONDS: f32 = 1.0;
+
+#[derive(Resource, Default)]
+struct VantageCamera {
+    blend: f32,
+}
+
 pub fn movement_plugin(app: &mut App) {
-    app.add_systems(Update, toggle_actions)
+    app.init_resource::<VantageCamera>()
+        .add_systems(Update, toggle_actions)
         .add_systems(Update, input.run_if(in_state(GamePhase::Playing)))
         .add_systems(Update, movement_sfx.in_set(SfxSystems::Trigger))
         .add_systems(Update, (do_movement, follow_camera).chain());
@@ -617,9 +630,57 @@ fn rotate_camera_around_y(
 }
 
 fn follow_camera(
-    player: Single<&Transform, (With<Player>, Without<CameraRig>)>,
-    mut camera: Single<&mut Transform, (With<CameraRig>, Without<Player>)>,
+    time: Res<Time>,
+    player: Single<(&Transform, &GridLocation), (With<Player>, Without<CameraRig>)>,
+    mut camera_rig: Single<&mut Transform, (With<CameraRig>, Without<Player>, Without<Camera3d>)>,
+    camera: Single<
+        (&mut Transform, &mut Projection),
+        (With<Camera3d>, Without<CameraRig>, Without<Player>),
+    >,
+    mut vantage_camera: ResMut<VantageCamera>,
 ) {
-    camera.translation.x = player.translation.x;
-    camera.translation.z = player.translation.z;
+    let (player_transform, grid_location) = player.into_inner();
+    let target_blend = if grid_location.0.x as u32 == VANTAGE_POINT.x
+        && grid_location.0.z as u32 == VANTAGE_POINT.y
+    {
+        1.0
+    } else {
+        0.0
+    };
+    let blend_step = time.delta_secs() / VANTAGE_TRANSITION_SECONDS;
+    if vantage_camera.blend < target_blend {
+        vantage_camera.blend = (vantage_camera.blend + blend_step).min(target_blend);
+    } else {
+        vantage_camera.blend = (vantage_camera.blend - blend_step).max(target_blend);
+    }
+
+    // Smoothstep keeps both ends of the transition from snapping.
+    let blend = vantage_camera.blend * vantage_camera.blend * (3.0 - 2.0 * vantage_camera.blend);
+    let map_center = vec3(
+        (MAP_WIDTH as f32 - 1.0) / 2.0,
+        player_transform.translation.y,
+        (MAP_HEIGHT as f32 - 1.0) / 2.0,
+    );
+    camera_rig.translation = player_transform.translation.lerp(map_center, blend);
+
+    let normal_transform = Transform {
+        translation: vec3(40.0, 32.66, 40.0),
+        rotation: Quat::from_euler(EulerRot::YXZ, PI / 4.0, -PI / 6.0, 0.0),
+        ..default()
+    };
+    let overview_transform =
+        Transform::from_xyz(0.0, 120.0, 0.0).looking_at(Vec3::ZERO, Vec3::NEG_Z);
+    let (mut camera_transform, mut projection) = camera.into_inner();
+    camera_transform.translation = normal_transform
+        .translation
+        .lerp(overview_transform.translation, blend);
+    camera_transform.rotation = normal_transform
+        .rotation
+        .slerp(overview_transform.rotation, blend);
+
+    if let Projection::Orthographic(orthographic) = projection.as_mut() {
+        orthographic.scaling_mode = ScalingMode::FixedVertical {
+            viewport_height: NORMAL_VIEW_HEIGHT.lerp(OVERVIEW_VIEW_HEIGHT, blend),
+        };
+    }
 }
