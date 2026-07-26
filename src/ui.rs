@@ -1,4 +1,6 @@
-use crate::ecs::{CompletedTurn, TurnCountText, TurnCounter};
+use crate::ecs::{
+    AvailableActions, CompletedTurn, Player, PlayerAction, TurnCountText, TurnCounter,
+};
 use crate::story::ResetGame;
 use bevy::prelude::*;
 
@@ -18,10 +20,31 @@ pub(crate) struct UtilityConfirmation(Option<UtilityAction>);
 #[derive(Component)]
 pub(crate) struct UtilityConfirmationText;
 
+#[derive(Component)]
+struct ActionKey(PlayerAction);
+
+const ACTION_GRID: [Option<(PlayerAction, &str)>; 12] = [
+    Some((PlayerAction::TurnLeft, "Q")),
+    Some((PlayerAction::RollForward, "W")),
+    Some((PlayerAction::TurnRight, "E")),
+    Some((PlayerAction::RollLeft, "A")),
+    Some((PlayerAction::RollBackward, "S")),
+    Some((PlayerAction::RollRight, "D")),
+    Some((PlayerAction::SlideLeft, "Z")),
+    Some((PlayerAction::TurnAround, "X")),
+    Some((PlayerAction::SlideRight, "C")),
+    None,
+    Some((PlayerAction::Wait, "_")),
+    None,
+];
+
 pub fn ui_plugin(app: &mut App) {
     app.init_resource::<UtilityConfirmation>()
-        .add_systems(Startup, setup_utility_confirmation)
-        .add_systems(Update, update_turn_count.after(utility_buttons));
+        .add_systems(Startup, (setup_utility_confirmation, setup_action_grid))
+        .add_systems(
+            Update,
+            (update_turn_count.after(utility_buttons), update_action_grid),
+        );
 }
 
 pub fn ui() -> impl Scene {
@@ -38,6 +61,61 @@ pub fn ui() -> impl Scene {
                 TurnCountText
             )
         ]
+    }
+}
+
+fn setup_action_grid(mut commands: Commands) {
+    commands
+        .spawn((
+            Name::new("available actions"),
+            Node {
+                position_type: PositionType::Absolute,
+                top: px(16.0),
+                right: px(16.0),
+                display: Display::Grid,
+                grid_template_columns: RepeatedGridTrack::px(3, 52.0),
+                grid_template_rows: RepeatedGridTrack::px(4, 44.0),
+                row_gap: px(6.0),
+                column_gap: px(6.0),
+                padding: UiRect::all(px(8.0)),
+                ..default()
+            },
+            GlobalZIndex(10),
+        ))
+        .with_children(|grid| {
+            for cell in ACTION_GRID {
+                let Some((action, key)) = cell else {
+                    grid.spawn(Node::default());
+                    continue;
+                };
+                grid.spawn((
+                    Name::new(format!("{key} action")),
+                    Text::new(key),
+                    TextFont::from_font_size(22.0),
+                    TextColor(Color::WHITE),
+                    TextLayout::justify(Justify::Center),
+                    Node {
+                        width: percent(100.0),
+                        height: percent(100.0),
+                        padding: UiRect::vertical(px(8.0)),
+                        ..default()
+                    },
+                    ActionKey(action),
+                ));
+            }
+        });
+}
+
+fn update_action_grid(
+    available_actions: Single<&AvailableActions, With<Player>>,
+    mut action_keys: Query<(&ActionKey, &mut TextColor)>,
+) {
+    for (action_key, mut text_color) in &mut action_keys {
+        text_color.0 = if available_actions.contains(action_key.0) {
+            Color::WHITE
+        } else {
+            Color::srgba(0.65, 0.65, 0.65, 0.3)
+        };
     }
 }
 
