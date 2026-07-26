@@ -119,6 +119,13 @@ pub struct ObstructedSet(pub HashSet<UVec3>);
 #[derive(Resource, Clone, Default, Debug)]
 pub struct WallSet(pub HashSet<UVec3>);
 
+/// whether gates will be open next turn
+#[derive(Resource, Clone, Default, Debug)]
+pub struct GateEntrySet {
+    pub locations: HashSet<UVec3>,
+    pub open_next_turn: HashSet<UVec3>,
+}
+
 /// initial ObstructedSet to reset to
 #[derive(Resource, Clone, Default, Debug)]
 pub struct InitialObstructedSet(pub HashSet<UVec3>);

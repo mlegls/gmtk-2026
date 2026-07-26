@@ -1,6 +1,6 @@
 use crate::ecs::{
-    Arrow, AvailableActions, CameraRig, CompletedTurn, DebugMode, Direction, GridLocation, Moving,
-    ObstructedSet, Orientation, Player, PlayerAction, TurnCounter, WallSet,
+    Arrow, AvailableActions, CameraRig, CompletedTurn, DebugMode, Direction, GateEntrySet,
+    GridLocation, Moving, ObstructedSet, Orientation, Player, PlayerAction, TurnCounter, WallSet,
 };
 use crate::sfx::{PlaySfx, Sfx, SfxSystems};
 use crate::story::GamePhase;
@@ -79,7 +79,7 @@ fn movement_sfx(
     }
 }
 
-fn input(
+pub(crate) fn input(
     player: Single<
         (
             Entity,
@@ -95,6 +95,7 @@ fn input(
     keys: Res<ButtonInput<KeyCode>>,
     obstructed_set: Res<ObstructedSet>,
     wall_set: Res<WallSet>,
+    gate_entries: Res<GateEntrySet>,
     mut commands: Commands,
 ) {
     if **debug_mode && shift_pressed(&keys) {
@@ -108,9 +109,12 @@ fn input(
         // roll north 1 space
         let future_grid_location =
             grid_location.0 + orientation.0.to_rotation() * Direction::North.to_vec_direction();
-        let Some(roll_in_place) =
-            roll_behavior(future_grid_location.as_uvec3(), &obstructed_set, &wall_set)
-        else {
+        let Some(roll_in_place) = roll_behavior(
+            future_grid_location.as_uvec3(),
+            &obstructed_set,
+            &wall_set,
+            &gate_entries,
+        ) else {
             return;
         };
 
@@ -125,9 +129,12 @@ fn input(
         // roll south
         let future_grid_location =
             grid_location.0 + orientation.0.to_rotation() * Direction::South.to_vec_direction();
-        let Some(roll_in_place) =
-            roll_behavior(future_grid_location.as_uvec3(), &obstructed_set, &wall_set)
-        else {
+        let Some(roll_in_place) = roll_behavior(
+            future_grid_location.as_uvec3(),
+            &obstructed_set,
+            &wall_set,
+            &gate_entries,
+        ) else {
             return;
         };
 
@@ -142,9 +149,12 @@ fn input(
         // roll west
         let future_grid_location =
             grid_location.0 + orientation.0.to_rotation() * Direction::West.to_vec_direction();
-        let Some(roll_in_place) =
-            roll_behavior(future_grid_location.as_uvec3(), &obstructed_set, &wall_set)
-        else {
+        let Some(roll_in_place) = roll_behavior(
+            future_grid_location.as_uvec3(),
+            &obstructed_set,
+            &wall_set,
+            &gate_entries,
+        ) else {
             return;
         };
 
@@ -159,9 +169,12 @@ fn input(
         // roll east
         let future_grid_location =
             grid_location.0 + orientation.0.to_rotation() * Direction::East.to_vec_direction();
-        let Some(roll_in_place) =
-            roll_behavior(future_grid_location.as_uvec3(), &obstructed_set, &wall_set)
-        else {
+        let Some(roll_in_place) = roll_behavior(
+            future_grid_location.as_uvec3(),
+            &obstructed_set,
+            &wall_set,
+            &gate_entries,
+        ) else {
             return;
         };
 
@@ -215,9 +228,12 @@ fn input(
         // slide left (translate, no roll)
         let future_grid_location =
             grid_location.0 + orientation.0.to_rotation() * Direction::West.to_vec_direction();
-        let Some(roll_in_place) =
-            roll_behavior(future_grid_location.as_uvec3(), &obstructed_set, &wall_set)
-        else {
+        let Some(roll_in_place) = roll_behavior(
+            future_grid_location.as_uvec3(),
+            &obstructed_set,
+            &wall_set,
+            &gate_entries,
+        ) else {
             return;
         };
 
@@ -236,9 +252,12 @@ fn input(
         // slide right
         let future_grid_location =
             grid_location.0 + orientation.0.to_rotation() * Direction::East.to_vec_direction();
-        let Some(roll_in_place) =
-            roll_behavior(future_grid_location.as_uvec3(), &obstructed_set, &wall_set)
-        else {
+        let Some(roll_in_place) = roll_behavior(
+            future_grid_location.as_uvec3(),
+            &obstructed_set,
+            &wall_set,
+            &gate_entries,
+        ) else {
             return;
         };
 
@@ -268,9 +287,15 @@ fn roll_behavior(
     destination: UVec3,
     obstructed_set: &ObstructedSet,
     wall_set: &WallSet,
+    gate_entries: &GateEntrySet,
 ) -> Option<bool> {
     if wall_set.0.contains(&destination) {
         Some(true)
+    } else if gate_entries.locations.contains(&destination) {
+        gate_entries
+            .open_next_turn
+            .contains(&destination)
+            .then_some(false)
     } else if obstructed_set.0.contains(&destination) {
         None
     } else {
