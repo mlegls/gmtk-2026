@@ -1,4 +1,3 @@
-use std::time::Instant;
 use bevy::prelude::*;
 use crate::ecs::LinearTranslationAnimation;
 
@@ -16,7 +15,6 @@ fn linear_translation_animation(
         let progress = elapsed.as_secs_f32() / animation.length.as_secs_f32();
         transform.translation = animation.start_position + progress.min(1.0)*(animation.end_position - animation.start_position);
 
-        info!("progress: {} {} {}", progress, elapsed.as_secs_f32(), animation.length.as_secs_f32());
         if progress > 1.0 {
             commands.entity(entity).remove::<LinearTranslationAnimation>();
         }
