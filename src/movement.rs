@@ -215,11 +215,9 @@ fn input(
         // slide left (translate, no roll)
         let future_grid_location =
             grid_location.0 + orientation.0.to_rotation() * Direction::West.to_vec_direction();
-        let Some(roll_in_place) = roll_behavior(
-            future_grid_location.as_uvec3(),
-            &obstructed_set,
-            &wall_set,
-        ) else {
+        let Some(roll_in_place) =
+            roll_behavior(future_grid_location.as_uvec3(), &obstructed_set, &wall_set)
+        else {
             return;
         };
 
@@ -238,11 +236,9 @@ fn input(
         // slide right
         let future_grid_location =
             grid_location.0 + orientation.0.to_rotation() * Direction::East.to_vec_direction();
-        let Some(roll_in_place) = roll_behavior(
-            future_grid_location.as_uvec3(),
-            &obstructed_set,
-            &wall_set,
-        ) else {
+        let Some(roll_in_place) =
+            roll_behavior(future_grid_location.as_uvec3(), &obstructed_set, &wall_set)
+        else {
             return;
         };
 

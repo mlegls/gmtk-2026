@@ -251,6 +251,9 @@ fn atlas_uv_transform(number: u32) -> Affine2 {
 fn timer_block_material(kind: TimerVisualKind) -> StandardMaterial {
     let base_color = match kind {
         TimerVisualKind::Periodic => Color::srgba(0.5, 0.2, 0., 0.55),
+        TimerVisualKind::PeriodicPulse | TimerVisualKind::OneShotPulse => {
+            Color::srgba(0.7, 0.02, 0.02, 0.55)
+        }
         TimerVisualKind::AfterCountdown => Color::srgba(0., 0.5, 0.2, 0.55),
         TimerVisualKind::DuringCountdown => Color::srgba(0.0, 0.2, 0.5, 0.55),
         TimerVisualKind::OneShot => Color::srgba(0.2, 0.2, 0., 0.55),

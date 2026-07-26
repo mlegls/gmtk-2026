@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::ecs::{CompletedTurn, TurnCountText, TurnCounter};
+use bevy::prelude::*;
 
 pub fn ui_plugin(app: &mut App) {
     app.add_systems(Update, update_turn_count);

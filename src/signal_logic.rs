@@ -64,9 +64,11 @@ impl SwitchStates {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum TimerVisualKind {
     Periodic,
+    PeriodicPulse,
     AfterCountdown,
     DuringCountdown,
     OneShot,
+    OneShotPulse,
 }
 
 #[derive(Clone, Debug)]
@@ -153,26 +155,48 @@ impl TimerInstance {
     pub fn visual_state(&self) -> Option<(u32, f32, TimerVisualKind)> {
         match (&self.template, &self.runtime) {
             (
-                TimerTemplate::Periodic { period, .. },
+                TimerTemplate::Periodic {
+                    period,
+                    pulse_turns,
+                    ..
+                },
                 TimerRuntime::Periodic {
                     running,
                     turn_in_cycle,
                     ..
                 },
             ) if *running => {
-                let remaining = period.saturating_sub(*turn_in_cycle);
-                Some((
-                    remaining,
-                    remaining as f32 / (*period).max(1) as f32,
-                    TimerVisualKind::Periodic,
-                ))
+                let pulse_turns = (*pulse_turns).min(*period);
+                if pulse_turns == 0 {
+                    let remaining = period.saturating_sub(*turn_in_cycle);
+                    return Some((
+                        remaining,
+                        remaining as f32 / (*period).max(1) as f32,
+                        TimerVisualKind::Periodic,
+                    ));
+                }
+
+                let pulse_start = period.saturating_sub(pulse_turns) + 1;
+                if *turn_in_cycle <= pulse_start {
+                    let remaining = pulse_start - *turn_in_cycle;
+                    Some((
+                        remaining,
+                        remaining as f32 / pulse_start.max(1) as f32,
+                        TimerVisualKind::Periodic,
+                    ))
+                } else {
+                    let remaining = period.saturating_sub(*turn_in_cycle) + 1;
+                    Some((
+                        remaining,
+                        remaining as f32 / pulse_turns.saturating_sub(1).max(1) as f32,
+                        TimerVisualKind::PeriodicPulse,
+                    ))
+                }
             }
             (
                 TimerTemplate::ActiveAfterCountdown { turns, .. },
                 TimerRuntime::AfterCountdown {
-                    running,
-                    remaining,
-                    ..
+                    running, remaining, ..
                 },
             ) if *running => Some((
                 *remaining,
@@ -182,9 +206,7 @@ impl TimerInstance {
             (
                 TimerTemplate::ActiveDuringCountdown { turns, .. },
                 TimerRuntime::DuringCountdown {
-                    running,
-                    remaining,
-                    ..
+                    running, remaining, ..
                 },
             ) if *running => Some((
                 *remaining,
@@ -193,9 +215,7 @@ impl TimerInstance {
             )),
             (
                 TimerTemplate::OneShot {
-                    turns,
-                    pulse_turns,
-                    ..
+                    turns, pulse_turns, ..
                 },
                 TimerRuntime::OneShot {
                     running,
@@ -215,7 +235,7 @@ impl TimerInstance {
                     Some((
                         visible_pulse,
                         visible_pulse as f32 / (*pulse_turns).max(1) as f32,
-                        TimerVisualKind::OneShot,
+                        TimerVisualKind::OneShotPulse,
                     ))
                 }
             }
@@ -239,6 +259,11 @@ impl TimerInstance {
             ) => {
                 if !*running {
                     *output = false;
+                    return;
+                }
+                if *period == 0 {
+                    *turn_in_cycle = 0;
+                    *output = *pulse_turns > 0;
                     return;
                 }
                 if *turn_in_cycle == *period {
@@ -323,7 +348,6 @@ impl TimerInstance {
             _ => unreachable!("timer runtime must match its template"),
         }
     }
-
 }
 
 #[derive(Component, Clone, Debug)]
@@ -334,14 +358,9 @@ pub struct TimerBank {
 
 impl TimerBank {
     pub fn new(slot_names: &InitialTimerSlots, templates: &HashMap<String, TimerTemplate>) -> Self {
-        let initial = slot_names.clone().map(|name| {
-            name.map(|name| {
-                templates
-                    .get(&name)
-                    .expect("bad map metadata")
-                    .clone()
-            })
-        });
+        let initial = slot_names
+            .clone()
+            .map(|name| name.map(|name| templates.get(&name).expect("bad map metadata").clone()));
         let slots = initial
             .clone()
             .map(|template| template.map(TimerInstance::new));

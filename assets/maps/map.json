@@ -16,6 +16,24 @@
       "period": 2,
       "pulse_turns": 1,
       "initial": true
+    },
+    "every_three_turns": {
+      "mode": "periodic",
+      "period": 3,
+      "pulse_turns": 1,
+      "initial": true
+    },
+    "two_of_every_four_turns": {
+      "mode": "periodic",
+      "period": 4,
+      "pulse_turns": 2,
+      "initial": true
+    },
+    "one_shot_bridge": {
+      "mode": "one_shot",
+      "turns": 5,
+      "pulse_turns": 5,
+      "initial": true
     }
   },
   "associations": [
@@ -38,17 +56,33 @@
     },
     {
       "position": [23, 8],
-      "timers": ["every_two_turns", null, null],
+      "timers": [null, "every_two_turns", null],
       "activated_by": {
-        "any": [{ "timer": 1 }]
+        "any": [{ "timer": 2 }]
       }
     },
     {
       "position": [25, 11],
-      "timers": ["every_two_turns", null, null],
+      "timers": [null, "every_two_turns", null],
       "activated_by": {
-        "any": [{ "timer": 1 }]
+        "any": [{ "timer": 2 }]
       }
+    },
+
+    {
+      "position": [20, 19],
+      "timers": ["every_three_turns", null, null],
+      "activated_by": { "any": [{ "timer": 1 }] }
+    },
+    {
+      "position": [20, 20],
+      "timers": ["two_of_every_four_turns", null, null],
+      "activated_by": { "any": [{ "timer": 1 }] }
+    },
+    {
+      "position": [20, 21],
+      "timers": ["one_shot_bridge", null, null],
+      "activated_by": { "any": [{ "timer": 1 }] }
     }
   ],
   "altars": [

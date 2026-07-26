@@ -1,5 +1,3 @@
 use bevy::prelude::*;
 
-fn altar_ui() -> impl Scene {
-    
-}
+fn altar_ui() -> impl Scene {}

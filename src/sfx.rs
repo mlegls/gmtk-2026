@@ -8,6 +8,7 @@ pub enum Sfx {
     Conveyor,
     PressurePlate,
     Gate,
+    BridgeCollapse,
 }
 
 #[derive(Message, Clone, Copy, Debug)]
@@ -27,6 +28,7 @@ struct SfxAssets {
     conveyor: Handle<AudioSource>,
     pressure_plate: Handle<AudioSource>,
     gate: Handle<AudioSource>,
+    bridge_collapse: Handle<AudioSource>,
 }
 
 impl SfxAssets {
@@ -38,6 +40,7 @@ impl SfxAssets {
             Sfx::Conveyor => self.conveyor.clone(),
             Sfx::PressurePlate => self.pressure_plate.clone(),
             Sfx::Gate => self.gate.clone(),
+            Sfx::BridgeCollapse => self.bridge_collapse.clone(),
         }
     }
 }
@@ -58,6 +61,7 @@ fn load_sfx(mut commands: Commands, asset_server: Res<AssetServer>) {
         conveyor: asset_server.load("sfx/Conveyer.ogg"),
         pressure_plate: asset_server.load("sfx/Pressure Plate.ogg"),
         gate: asset_server.load("sfx/door/Door A.ogg"),
+        bridge_collapse: asset_server.load("sfx/Bridge Collapse.ogg"),
     });
 }
 

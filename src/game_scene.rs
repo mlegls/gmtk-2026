@@ -1,8 +1,9 @@
+use crate::bridge::spawn_bridge_tile;
 use crate::ecs::{
     Arrow, ArrowBlock, AvailableActions, CameraRig, ConveyorBelt, Direction, Gate, GridLocation,
     InitialObstructedSet, ObstructedSet, Orientation, Player, PressurePlate, WallSet,
 };
-use crate::map_loader::{GroundTile, StuffTile, TileLayer};
+use crate::map_loader::{GroundTile, StuffTile};
 use crate::signal_logic::TimerBank;
 use crate::ui::ui;
 use crate::{GRID_SIZE, map_loader::WorldMap};
@@ -249,47 +250,7 @@ fn generate_map(
                 });
             }
             if tile.stuff == StuffTile::Bridge {
-                let grid_location = uvec2(i as u32, j as u32);
-                let Some(segment) = bridge_segment(&world_map.tiles, i, j) else {
-                    warn!("Bridge at ({i}, {j}) has no neighboring bridge tile");
-                    continue;
-                };
-
-                match segment {
-                    BridgeSegment::HorizontalMiddle => {
-                        commands.spawn_scene(bridge_middle(grid_location, Quat::IDENTITY));
-                        obstructed_set
-                            .0
-                            .remove(&uvec3(grid_location.x, 0, grid_location.y));
-                    }
-                    BridgeSegment::VerticalMiddle => {
-                        commands.spawn_scene(bridge_middle(
-                            grid_location,
-                            Quat::from_rotation_y(PI / 2.0),
-                        ));
-                        obstructed_set
-                            .0
-                            .remove(&uvec3(grid_location.x, 0, grid_location.y));
-                    }
-                    BridgeSegment::BottomEnd => {
-                        commands.spawn_scene(bridge_end(
-                            grid_location,
-                            Quat::from_rotation_y(PI / 2.0),
-                        ));
-                    }
-                    BridgeSegment::TopEnd => {
-                        commands.spawn_scene(bridge_end(
-                            grid_location,
-                            Quat::from_rotation_y(-PI / 2.0),
-                        ));
-                    }
-                    BridgeSegment::LeftEnd => {
-                        commands.spawn_scene(bridge_end(grid_location, Quat::IDENTITY));
-                    }
-                    BridgeSegment::RightEnd => {
-                        commands.spawn_scene(bridge_end(grid_location, Quat::from_rotation_y(PI)));
-                    }
-                }
+                spawn_bridge_tile(&mut commands, &mut obstructed_set, &world_map.tiles, i, j);
             }
             if tile.stuff == StuffTile::Gate {
                 // gate
@@ -347,74 +308,4 @@ fn generate_map(
             TimerBank::new(slots, &world_map.timers),
         ));
     }
-}
-fn bridge_middle(grid_location: UVec2, rotation: Quat) -> impl Scene {
-    bsn! {
-        template(|ctx| {
-            Ok(WorldAssetRoot(ctx.resource::<AssetServer>().load(
-                GltfAssetLabel::Scene(0).from_asset("models/bridge/bridge_body.gltf")
-            )))
-        })
-        Transform {
-            translation: vec3(grid_location.x as f32 * GRID_SIZE.x, 0.0, grid_location.y as f32 * GRID_SIZE.y),
-            rotation,
-        }
-    }
-}
-fn bridge_end(grid_location: UVec2, rotation: Quat) -> impl Scene {
-    bsn! {
-        template(|ctx| {
-            Ok(WorldAssetRoot(ctx.resource::<AssetServer>().load(
-                GltfAssetLabel::Scene(0).from_asset("models/bridge/bridge_pillars_a.gltf")
-            )))
-        })
-        Transform {
-            translation: vec3(grid_location.x as f32 * GRID_SIZE.x, 0.0, grid_location.y as f32 * GRID_SIZE.y),
-            rotation,
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum BridgeSegment {
-    TopEnd,
-    LeftEnd,
-    VerticalMiddle,
-    HorizontalMiddle,
-    BottomEnd,
-    RightEnd,
-}
-
-fn bridge_segment(layer: &TileLayer, i: usize, j: usize) -> Option<BridgeSegment> {
-    let up = is_bridge(layer, i as isize, j as isize - 1);
-    let down = is_bridge(layer, i as isize, j as isize + 1);
-    let left = is_bridge(layer, i as isize - 1, j as isize);
-    let right = is_bridge(layer, i as isize + 1, j as isize);
-
-    if up && down {
-        Some(BridgeSegment::VerticalMiddle)
-    } else if left && right {
-        Some(BridgeSegment::HorizontalMiddle)
-    } else if up {
-        Some(BridgeSegment::BottomEnd)
-    } else if down {
-        Some(BridgeSegment::TopEnd)
-    } else if left {
-        Some(BridgeSegment::RightEnd)
-    } else if right {
-        Some(BridgeSegment::LeftEnd)
-    } else {
-        None
-    }
-}
-
-fn is_bridge(layer: &TileLayer, i: isize, j: isize) -> bool {
-    if i < 0 || j < 0 {
-        return false;
-    }
-
-    layer
-        .get(i as usize)
-        .and_then(|row| row.get(j as usize))
-        .is_some_and(|tile| tile.stuff == StuffTile::Bridge)
 }

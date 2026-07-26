@@ -12,7 +12,7 @@ const STEMS: [(PlayerAction, &str); 10] = [
     (PlayerAction::TurnAround, "music/bgm/Triangle_1.ogg"),
     (PlayerAction::SlideLeft, "music/bgm/Vox Hi_1.ogg"),
     (PlayerAction::SlideRight, "music/bgm/Vox Lo_1.ogg"),
-    (PlayerAction::Wait,  "music/bgm/Drumkit_1.ogg"),
+    (PlayerAction::Wait, "music/bgm/Drumkit_1.ogg"),
 ];
 
 #[derive(Resource)]
@@ -78,7 +78,6 @@ fn update_bgm_layers(
     available_actions: Single<&AvailableActions, With<Player>>,
     mut stems: Query<(&mut BgmStem, &mut AudioSink)>,
 ) {
-
     for (mut stem, mut sink) in &mut stems {
         let enabled = available_actions.contains(stem.action);
         if enabled != stem.enabled {

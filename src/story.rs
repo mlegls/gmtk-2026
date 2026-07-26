@@ -1,8 +1,9 @@
 use crate::MAX_TURN_COUNT;
+use crate::bridge::Bridge;
 use crate::ecs::{
     Altar, Arrow, ArrowBlock, AvailableActions, CameraRig, Direction, Gate, GridLocation,
-    InitialObstructedSet, Moving, ObstructedSet, Orientation, Player, PlayerAction, TurnCountText,
-    TurnCounter,
+    InitialObstructedSet, Moving, ObstructedSet, Orientation, Player, PlayerAction, SignalSystems,
+    TurnCountText, TurnCounter,
 };
 use crate::movement::CameraTurn;
 use crate::signal_logic::{SwitchStates, TimerBank};
@@ -129,7 +130,7 @@ pub fn story_plugin(app: &mut App) {
         .configure_sets(
             Update,
             (
-                StorySystems::Reset,
+                StorySystems::Reset.before(SignalSystems::Write),
                 StorySystems::Events,
                 StorySystems::Display,
             )
@@ -250,6 +251,10 @@ fn reset_level(
         (&ArrowBlock, &mut Orientation, &mut Transform),
         (Without<Altar>, Without<Gate>),
     >,
+    mut bridges: Query<
+        (&mut Bridge, &mut Transform),
+        (Without<Altar>, Without<Gate>, Without<ArrowBlock>),
+    >,
 ) {
     if reset.read().next().is_none() {
         return;
@@ -266,6 +271,9 @@ fn reset_level(
     for (arrow, mut orientation, mut transform) in &mut arrow_blocks {
         orientation.0 = arrow.initial_orientation;
         transform.rotation = arrow.initial_rotation;
+    }
+    for (mut bridge, mut transform) in &mut bridges {
+        bridge.reset(&mut transform);
     }
 }
 
