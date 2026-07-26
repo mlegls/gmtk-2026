@@ -137,7 +137,14 @@ pub fn story_plugin(app: &mut App) {
         )
         .add_systems(
             Update,
-            (request_reset, reset_player, reset_level, reset_timers)
+            (
+                request_reset,
+                crate::ui::utility_buttons,
+                reset_story,
+                reset_player,
+                reset_level,
+                reset_timers,
+            )
                 .chain()
                 .in_set(StorySystems::Reset),
         )
@@ -175,11 +182,6 @@ fn request_reset(
     phase: Res<State<GamePhase>>,
     keys: Res<ButtonInput<KeyCode>>,
     mut reset: MessageWriter<ResetGame>,
-    mut history: ResMut<SacrificeHistory>,
-    mut narration: ResMut<Narration>,
-    story_text: Query<Entity, With<StoryText>>,
-    mut commands: Commands,
-    mut next_phase: ResMut<NextState<GamePhase>>,
 ) {
     if *phase.get() != GamePhase::Ending
         || !PlayerAction::ALL
@@ -189,13 +191,27 @@ fn request_reset(
         return;
     }
 
+    reset.write(ResetGame);
+}
+
+fn reset_story(
+    mut reset: MessageReader<ResetGame>,
+    mut history: ResMut<SacrificeHistory>,
+    mut narration: ResMut<Narration>,
+    story_text: Query<Entity, With<StoryText>>,
+    mut commands: Commands,
+    mut next_phase: ResMut<NextState<GamePhase>>,
+) {
+    if reset.read().next().is_none() {
+        return;
+    }
+
     history.0.clear();
     narration.queue = beginning_queue();
     narration.active = false;
     for entity in &story_text {
         commands.entity(entity).despawn();
     }
-    reset.write(ResetGame);
     next_phase.set(GamePhase::Playing);
 }
 
