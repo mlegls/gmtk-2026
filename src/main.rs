@@ -17,6 +17,7 @@ pub mod signal_logic;
 pub mod story;
 pub mod timer_visual;
 pub mod ui;
+pub mod animation;
 
 use crate::altar::altar_plugin;
 use crate::arrow_block::arrow_block_plugin;
@@ -38,6 +39,7 @@ use crate::timer_visual::timer_visual_plugin;
 use crate::ui::ui_plugin;
 use bevy::prelude::*;
 use std::collections::HashSet;
+use crate::animation::animation_plugin;
 
 pub const MAX_TURN_COUNT: u32 = 1000;
 pub const PLAYER_START: Vec3 = vec3(27.0, 0.0, 1.0);
@@ -81,6 +83,7 @@ fn main() {
         .add_plugins(sfx_plugin)
         .add_plugins(story_plugin)
         .add_plugins(face_id_plugin)
+        .add_plugins(animation_plugin)
         .configure_sets(
             Update,
             (
