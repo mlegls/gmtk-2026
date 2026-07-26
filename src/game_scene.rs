@@ -24,7 +24,7 @@ fn capture_initial_obstructions(mut commands: Commands, obstructed_set: Res<Obst
 
 fn scene() -> impl SceneList {
     bsn_list![
-        isometric_camera(), ui(),
+        isometric_camera(), background_camera(), background(), ui(),
         (
             player()
             Player
@@ -50,11 +50,17 @@ fn isometric_camera() -> impl Scene {
         Children [
             (
                 Camera3d
+                Camera {
+                    order: 1
+                }
                 template_value(projection)
                 Transform {
                     rotation,
                     translation: vec3(40.0, 32.66, 40.0)
                 }
+            ),
+            (
+
             ),
             (
                 PointLight {
@@ -63,6 +69,33 @@ fn isometric_camera() -> impl Scene {
                 Transform::from_xyz(0.0, 8.0, 0.0)
             ),
         ]
+    }
+}
+fn background_camera() -> impl Scene {
+    bsn! {
+        Camera2d
+        Camera {
+            order: 0
+        }
+    }
+}
+fn background() -> impl Scene {
+    //     Mesh3d(asset_value(Rectangle::new(2.0, 0.5)))
+    //     template(|ctx| {
+    //         let handle = ctx.resource::<AssetServer>().load("The_City.png");
+    //         Ok(MeshMaterial3d::<StandardMaterial>(ctx.resource_mut::<Assets<StandardMaterial>>().add(StandardMaterial {
+    //             base_color_texture: Some(handle),
+    //             perceptual_roughness: 1.0,
+    //             alpha_mode: AlphaMode::Mask(0.5),
+    //             cull_mode: None,
+    //             ..default()
+    //         })))
+    //     })
+    bsn! {
+        Sprite {
+            image: "The_City.png",
+        }
+        Transform::from_scale(Vec3::splat(0.7))
     }
 }
 
