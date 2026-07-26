@@ -1,130 +1,142 @@
 {
   "switches": {
-    "pressure_plate_W": {
-      "mode": "hold",
+    "w_left_face_gate": {
+      "mode": "toggle",
+      "initial": false
+    },
+    "w_plate_gate": {
+      "mode": "toggle",
+      "initial": false
+    },
+    "w_top_face_gate": {
+      "mode": "toggle",
+      "initial": false
+    },
+    "c_reverse": {
+      "mode": "toggle",
+      "initial": false
+    },
+    "x_left_plate": {
+      "mode": "toggle",
+      "initial": false
+    },
+    "x_right_plate": {
+      "mode": "toggle",
       "initial": false
     }
   },
   "timers": {
-    "three_active_turns": {
+    "reverse_for_25_turns": {
       "mode": "active_during_countdown",
-      "turns": 3,
+      "turns": 25,
       "initial": true
     },
-    "every_two_turns": {
+    "alternating_gate": {
       "mode": "periodic",
       "period": 2,
       "pulse_turns": 1,
       "initial": true
     },
-    "every_three_turns": {
-      "mode": "periodic",
-      "period": 3,
-      "pulse_turns": 1,
-      "initial": true
-    },
-    "two_of_every_four_turns": {
-      "mode": "periodic",
-      "period": 4,
-      "pulse_turns": 2,
-      "initial": true
-    },
-    "one_shot_bridge": {
-      "mode": "one_shot",
-      "turns": 5,
-      "pulse_turns": 5,
+    "collapse_after_10_turns": {
+      "mode": "active_after_countdown",
+      "turns": 10,
       "initial": true
     }
   },
   "associations": [
-    {
-      "position": [19, 5],
-      "on_activate": {
-        "touch_switch": "pressure_plate_W",
-        "replace_timers": {
-          "position": [24, 6],
-          "with": ["three_active_turns", false, false]
-        }
-      }
-    },
-    {
-      "position": [24, 6],
-      "timers": [null, null, null],
-      "activated_by": {
-        "any": [{ "switch": "extension_plate" }, { "timer": 1 }]
-      }
-    },
-    {
-      "position": [23, 8],
-      "timers": [null, "every_two_turns", null],
-      "activated_by": {
-        "any": [{ "timer": 2 }]
-      }
-    },
-    {
-      "position": [25, 11],
-      "timers": [null, "every_two_turns", null],
-      "activated_by": {
-        "any": [{ "timer": 2 }]
-      }
-    },
-
-    {
-      "position": [20, 19],
-      "timers": ["every_three_turns", null, null],
-      "activated_by": { "any": [{ "timer": 1 }] }
-    },
-    {
-      "position": [20, 20],
-      "timers": ["two_of_every_four_turns", null, null],
-      "activated_by": { "any": [{ "timer": 1 }] }
-    },
-    {
-      "position": [20, 21],
-      "timers": ["one_shot_bridge", null, null],
-      "activated_by": { "any": [{ "timer": 1 }] }
-    }
+    {"position": [19, 5], "on_activate": {"touch_switch": "w_left_face_gate"}},
+    {"position": [23, 8], "activated_by": {"switch": "w_left_face_gate"}},
+    {"position": [22, 5], "on_activate": {"touch_switch": "w_plate_gate"}},
+    {"position": [24, 6], "activated_by": {"switch": "w_plate_gate"}},
+    {"position": [26, 3], "on_activate": {"touch_switch": "w_top_face_gate"}},
+    {"position": [25, 11], "activated_by": {"switch": "w_top_face_gate"}},
+    {"position": [26, 3], "on_activate": {"replace_timers": {"position": [31, 9], "with": ["reverse_for_25_turns", false, false]}}},
+    {"position": [31, 9], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [26, 3], "on_activate": {"replace_timers": {"position": [31, 10], "with": ["reverse_for_25_turns", false, false]}}},
+    {"position": [31, 10], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [10, 15], "timers": ["alternating_gate", null, null], "activated_by": {"not": {"timer": 1}}},
+    {"position": [8, 15], "timers": ["alternating_gate", null, null], "activated_by": {"timer": 1}},
+    {"position": [6, 15], "timers": ["alternating_gate", null, null], "activated_by": {"not": {"timer": 1}}},
+    {"position": [4, 17], "timers": ["alternating_gate", null, null], "activated_by": {"timer": 1}},
+    {"position": [4, 19], "timers": ["alternating_gate", null, null], "activated_by": {"not": {"timer": 1}}},
+    {"position": [4, 21], "timers": ["alternating_gate", null, null], "activated_by": {"timer": 1}},
+    {"position": [53, 11], "on_activate": {"replace_timers": {"position": [44, 15], "with": ["reverse_for_25_turns", false, false]}}},
+    {"position": [44, 15], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [53, 11], "on_activate": {"replace_timers": {"position": [45, 15], "with": ["reverse_for_25_turns", false, false]}}},
+    {"position": [45, 15], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [53, 11], "on_activate": {"replace_timers": {"position": [46, 15], "with": ["reverse_for_25_turns", false, false]}}},
+    {"position": [46, 15], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [53, 11], "on_activate": {"replace_timers": {"position": [47, 15], "with": ["reverse_for_25_turns", false, false]}}},
+    {"position": [47, 15], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [53, 11], "on_activate": {"replace_timers": {"position": [48, 15], "with": ["reverse_for_25_turns", false, false]}}},
+    {"position": [48, 15], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [53, 11], "on_activate": {"replace_timers": {"position": [49, 15], "with": ["reverse_for_25_turns", false, false]}}},
+    {"position": [49, 15], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [53, 11], "on_activate": {"replace_timers": {"position": [50, 15], "with": ["reverse_for_25_turns", false, false]}}},
+    {"position": [50, 15], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [8, 34], "on_activate": {"replace_timers": {"position": [8, 35], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [8, 34], "on_activate": {"replace_timers": {"position": [8, 36], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [8, 34], "on_activate": {"replace_timers": {"position": [8, 37], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [8, 34], "on_activate": {"replace_timers": {"position": [8, 38], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [8, 39], "on_activate": {"replace_timers": {"position": [8, 35], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [8, 39], "on_activate": {"replace_timers": {"position": [8, 36], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [8, 39], "on_activate": {"replace_timers": {"position": [8, 37], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [8, 39], "on_activate": {"replace_timers": {"position": [8, 38], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [8, 35], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [8, 36], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [8, 37], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [8, 38], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [43, 48], "on_activate": {"replace_timers": {"position": [44, 48], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [43, 48], "on_activate": {"replace_timers": {"position": [45, 48], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [43, 48], "on_activate": {"replace_timers": {"position": [46, 48], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [44, 48], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [45, 48], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [46, 48], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [21, 52], "on_activate": {"replace_timers": {"position": [22, 52], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [21, 52], "on_activate": {"replace_timers": {"position": [23, 52], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [21, 52], "on_activate": {"replace_timers": {"position": [24, 52], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [21, 52], "on_activate": {"replace_timers": {"position": [25, 52], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [22, 52], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [23, 52], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [24, 52], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [25, 52], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [5, 56], "on_activate": {"replace_timers": {"position": [3, 59], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [5, 56], "on_activate": {"replace_timers": {"position": [4, 59], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [5, 56], "on_activate": {"replace_timers": {"position": [5, 59], "with": ["collapse_after_10_turns", false, false]}}},
+    {"position": [3, 59], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [4, 59], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [5, 59], "timers": [null, null, null], "activated_by": {"timer": 1}},
+    {"position": [53, 59], "on_activate": {"touch_switch": "c_reverse"}},
+    {"position": [44, 67], "on_activate": {"touch_switch": "c_reverse"}},
+    {"position": [43, 61], "activated_by": {"switch": "c_reverse"}},
+    {"position": [44, 61], "activated_by": {"switch": "c_reverse"}},
+    {"position": [45, 61], "activated_by": {"switch": "c_reverse"}},
+    {"position": [43, 62], "activated_by": {"switch": "c_reverse"}},
+    {"position": [44, 62], "activated_by": {"switch": "c_reverse"}},
+    {"position": [45, 62], "activated_by": {"switch": "c_reverse"}},
+    {"position": [43, 63], "activated_by": {"switch": "c_reverse"}},
+    {"position": [44, 63], "activated_by": {"switch": "c_reverse"}},
+    {"position": [43, 64], "activated_by": {"switch": "c_reverse"}},
+    {"position": [44, 64], "activated_by": {"switch": "c_reverse"}},
+    {"position": [45, 64], "activated_by": {"switch": "c_reverse"}},
+    {"position": [43, 65], "activated_by": {"switch": "c_reverse"}},
+    {"position": [44, 65], "activated_by": {"switch": "c_reverse"}},
+    {"position": [45, 65], "activated_by": {"switch": "c_reverse"}},
+    {"position": [23, 71], "on_activate": {"touch_switch": "x_left_plate"}},
+    {"position": [29, 72], "activated_by": {"switch": "x_left_plate"}},
+    {"position": [30, 71], "on_activate": {"touch_switch": "x_right_plate"}},
+    {"position": [24, 72], "activated_by": {"switch": "x_right_plate"}}
   ],
   "altars": [
-    {
-      "position": [27, 8],
-      "action": "RollForward"
-    },
-    {
-      "position": [8, 19],
-      "action": "TurnLeft"
-    },
-    {
-      "position": [46, 19],
-      "action": "TurnRight"
-    },
-    {
-      "position": [8, 41],
-      "action": "RollLeft"
-    },
-    {
-      "position": [46, 41],
-      "action": "RollRight"
-    },
-    {
-      "position": [27, 52],
-      "action": "RollBackward"
-    },
-    {
-      "position": [8, 63],
-      "action": "SlideLeft"
-    },
-    {
-      "position": [46, 63],
-      "action": "SlideRight"
-    },
-    {
-      "position": [27, 74],
-      "action": "TurnAround"
-    },
-    {
-      "position": [27, 96],
-      "action": "Wait"
-    }
+    {"position": [27, 8], "action": "RollForward"},
+    {"position": [8, 19], "action": "TurnLeft"},
+    {"position": [46, 19], "action": "TurnRight"},
+    {"position": [8, 41], "action": "RollLeft"},
+    {"position": [46, 41], "action": "RollRight"},
+    {"position": [27, 52], "action": "RollBackward"},
+    {"position": [8, 63], "action": "SlideLeft"},
+    {"position": [46, 63], "action": "SlideRight"},
+    {"position": [27, 74], "action": "TurnAround"},
+    {"position": [27, 96], "action": "Wait"}
   ]
 }

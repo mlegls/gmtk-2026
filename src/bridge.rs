@@ -4,9 +4,7 @@ use bevy::prelude::*;
 
 use crate::GRID_SIZE;
 use crate::PLAYER_START;
-use crate::ecs::{
-    GridLocation, InitialObstructedSet, Moving, ObstructedSet, Player, SignalSystems,
-};
+use crate::ecs::{GridLocation, Moving, ObstructedSet, Player, SignalSystems};
 use crate::map_loader::{GroundTile, StuffTile, TileLayer, WorldMap};
 use crate::movement::place_player;
 use crate::sfx::{PlaySfx, Sfx, SfxSystems};
@@ -22,7 +20,6 @@ pub struct Bridge {
     traversable_when_intact: bool,
     collapsed: bool,
     fall_speed: f32,
-    wait_for_inactive: bool,
 }
 
 impl Bridge {
@@ -37,18 +34,11 @@ impl Bridge {
             traversable_when_intact,
             collapsed: false,
             fall_speed: 0.0,
-            wait_for_inactive: false,
         }
     }
 
     pub fn reset(&mut self, transform: &mut Transform) {
         self.reset_transform(transform);
-        self.wait_for_inactive = false;
-    }
-
-    fn reset_after_player_fall(&mut self, transform: &mut Transform) {
-        self.reset_transform(transform);
-        self.wait_for_inactive = true;
     }
 
     fn reset_transform(&mut self, transform: &mut Transform) {
@@ -318,7 +308,6 @@ fn begin_collapse(
         (With<Bridge>, Without<Player>),
     >,
     player: Single<(Entity, &mut Transform, &mut GridLocation), (With<Player>, Without<Bridge>)>,
-    initial_obstructions: Res<InitialObstructedSet>,
     mut obstructed_set: ResMut<ObstructedSet>,
     mut play_sfx: MessageWriter<PlaySfx>,
     mut commands: Commands,
@@ -332,13 +321,6 @@ fn begin_collapse(
     for (mut bridge, mut transform, location) in &mut bridges {
         let position = uvec2(location.0.x as u32, location.0.z as u32);
         let active = activation_at(&world_map, position, &snapshot).unwrap_or(false);
-
-        if bridge.wait_for_inactive {
-            if !active {
-                bridge.wait_for_inactive = false;
-            }
-            continue;
-        }
 
         if active && !bridge.collapsed {
             bridge.collapsed = true;
@@ -372,16 +354,6 @@ fn begin_collapse(
             rotation,
         );
         commands.entity(player_entity).remove::<Moving>();
-
-        for (mut bridge, mut transform, location) in &mut bridges {
-            bridge.reset_after_player_fall(&mut transform);
-            let location = location.0.as_uvec3();
-            if initial_obstructions.0.contains(&location) {
-                obstructed_set.0.insert(location);
-            } else {
-                obstructed_set.0.remove(&location);
-            }
-        }
     }
 
     if let Some(position) = closest_collapse {

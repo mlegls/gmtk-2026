@@ -37,7 +37,7 @@ pub fn face_id_plugin(app: &mut App) {
 }
 
 fn update_switches(
-    player: Single<(&GridLocation, &Transform), With<Player>>,
+    player: Single<(Entity, &GridLocation, &Transform), With<Player>>,
     mut ray_cast: MeshRayCast,
     face_ids: Query<(&GridLocation, &FaceId), Without<Player>>,
     parents: Query<&ChildOf>,
@@ -55,9 +55,10 @@ fn update_switches(
         return;
     }
 
-    let player_position = uvec2(player.0.0.x as u32, player.0.0.z as u32);
-    let direction = player.1.rotation * -Vec3::Z;
-    let origin = player.1.translation + direction * 0.51;
+    let (player_entity, player_location, player_transform) = player.into_inner();
+    let player_position = uvec2(player_location.0.x as u32, player_location.0.z as u32);
+    let direction = player_transform.rotation * -Vec3::Z;
+    let origin = player_transform.translation;
 
     gizmos.arrow(origin, origin + direction, Color::srgb(1.0, 0.0, 0.0));
 
@@ -70,7 +71,7 @@ fn update_switches(
             ),
             &MeshRayCastSettings {
                 visibility: RayCastVisibility::Any,
-                filter: &|_| true,
+                filter: &|entity| !is_entity_or_descendant(entity, player_entity, &parents),
                 early_exit_test: &|_| true,
             },
         )
@@ -200,6 +201,22 @@ fn animate_indicators(
         transform.scale = Vec3::splat(eased);
         transform.translation.y = INDICATOR_HEIGHT + 0.25 * eased;
         transform.rotation = Quat::from_rotation_y(time.elapsed_secs() * 2.0 * eased);
+    }
+}
+
+fn is_entity_or_descendant(
+    mut entity: Entity,
+    ancestor: Entity,
+    parents: &Query<&ChildOf>,
+) -> bool {
+    loop {
+        if entity == ancestor {
+            return true;
+        }
+        let Ok(parent) = parents.get(entity) else {
+            return false;
+        };
+        entity = parent.parent();
     }
 }
 
