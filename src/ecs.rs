@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::f32::consts::PI;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 #[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SignalSystems {
@@ -19,6 +19,23 @@ pub struct DebugMode(pub bool);
 pub struct TurnCounter(pub u32);
 #[derive(Component, Clone, Default, Debug)]
 pub struct TurnCountText;
+#[derive(Component, Clone, Debug)]
+pub struct LinearTranslationAnimation {
+    pub start: Instant,
+    pub length: Duration,
+    pub start_position: Vec3,
+    pub end_position: Vec3,
+}
+impl LinearTranslationAnimation {
+    pub fn new(length: Duration, start_position: Vec3, end_position: Vec3) -> Self {
+        Self {
+            start: Instant::now(),
+            length,
+            start_position,
+            end_position,
+        }
+    }
+}
 
 #[derive(Component, Clone, Default, Debug)]
 pub struct Player;

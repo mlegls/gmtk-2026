@@ -182,11 +182,13 @@ fn request_reset(
     phase: Res<State<GamePhase>>,
     keys: Res<ButtonInput<KeyCode>>,
     mut reset: MessageWriter<ResetGame>,
+    turn_counter: Res<TurnCounter>,
 ) {
-    if *phase.get() != GamePhase::Ending
+    if (*phase.get() != GamePhase::Ending
         || !PlayerAction::ALL
             .iter()
-            .any(|action| keys.just_pressed(action.key_code()))
+            .any(|action| keys.just_pressed(action.key_code())))
+        && turn_counter.0 != 0
     {
         return;
     }
@@ -228,7 +230,7 @@ fn reset_player(
         With<Player>,
     >,
     mut arrow: Single<&mut Transform, (With<Arrow>, Without<Player>)>,
-    camera: Single<Entity, With<CameraRig>>,
+    mut camera: Single<(Entity, &mut Transform), (With<CameraRig>, Without<Player>, Without<Arrow>)>,
     mut turn_counter: ResMut<TurnCounter>,
     mut turn_count_text: Single<&mut Text, With<TurnCountText>>,
     mut commands: Commands,
@@ -246,8 +248,9 @@ fn reset_player(
     arrow.rotation = Quat::IDENTITY;
     **turn_counter = MAX_TURN_COUNT;
     ***turn_count_text = MAX_TURN_COUNT.to_string();
+    camera.1.rotation = Quat::IDENTITY;
     commands.entity(entity).remove::<Moving>();
-    commands.entity(*camera).remove::<CameraTurn>();
+    commands.entity(camera.0).remove::<CameraTurn>();
 }
 
 fn reset_level(
