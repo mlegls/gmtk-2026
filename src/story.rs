@@ -58,7 +58,7 @@ pub enum GamePhase {
 pub struct SkillSacrificed(pub PlayerAction);
 
 #[derive(Message, Clone, Copy, Debug)]
-struct ResetGame;
+pub(crate) struct ResetGame;
 
 #[derive(Resource, Default)]
 struct SacrificeHistory(Vec<PlayerAction>);

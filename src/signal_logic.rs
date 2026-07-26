@@ -412,6 +412,21 @@ impl SignalSnapshot {
         switches: &SwitchStates,
         timer_banks: &Query<(&GridLocation, &TimerBank), F>,
     ) -> Self {
+        Self::capture_with_timer_offset(switches, timer_banks, false)
+    }
+
+    pub fn capture_next_turn<F: QueryFilter>(
+        switches: &SwitchStates,
+        timer_banks: &Query<(&GridLocation, &TimerBank), F>,
+    ) -> Self {
+        Self::capture_with_timer_offset(switches, timer_banks, true)
+    }
+
+    fn capture_with_timer_offset<F: QueryFilter>(
+        switches: &SwitchStates,
+        timer_banks: &Query<(&GridLocation, &TimerBank), F>,
+        tick_timers: bool,
+    ) -> Self {
         Self {
             switches: switches
                 .0
@@ -421,12 +436,16 @@ impl SignalSnapshot {
             timers: timer_banks
                 .iter()
                 .map(|(location, bank)| {
-                    (
-                        uvec2(location.0.x as u32, location.0.z as u32),
-                        bank.slots
-                            .each_ref()
-                            .map(|slot| slot.as_ref().is_some_and(TimerInstance::output)),
-                    )
+                    let outputs = bank.slots.clone().map(|slot| {
+                        slot.map(|mut timer| {
+                            if tick_timers {
+                                timer.tick();
+                            }
+                            timer.output()
+                        })
+                        .unwrap_or(false)
+                    });
+                    (uvec2(location.0.x as u32, location.0.z as u32), outputs)
                 })
                 .collect(),
         }
