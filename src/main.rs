@@ -14,6 +14,7 @@ pub mod sfx;
 pub mod signal_logic;
 pub mod story;
 pub mod ui;
+pub mod face_id;
 
 use crate::altar::altar_plugin;
 use crate::arrow_block::arrow_block_plugin;
@@ -32,6 +33,7 @@ use crate::story::story_plugin;
 use crate::ui::ui_plugin;
 use bevy::prelude::*;
 use std::collections::HashSet;
+use crate::face_id::face_id_plugin;
 
 pub const MAX_TURN_COUNT: u32 = 1000;
 
@@ -58,6 +60,7 @@ fn main() {
         .insert_resource(WallSet(HashSet::new()))
         //.insert_resource(SpecialTileSet(HashMap::new()))
         .add_message::<CompletedTurn>()
+        .add_systems(Startup, gizmo_system)
         .add_plugins(game_scene_plugin)
         .add_plugins(movement_plugin)
         .add_plugins(ui_plugin)
@@ -70,6 +73,7 @@ fn main() {
         .add_plugins(music_plugin)
         .add_plugins(sfx_plugin)
         .add_plugins(story_plugin)
+        .add_plugins(face_id_plugin)
         .configure_sets(
             Update,
             (
@@ -80,4 +84,20 @@ fn main() {
                 .chain(),
         )
         .run();
+}
+
+fn gizmo_system(
+    mut commands: Commands,
+    mut gizmo_assets: ResMut<Assets<GizmoAsset>>,
+) {
+    let mut gizmo = GizmoAsset::default();
+
+    commands.spawn(Gizmo {
+        handle: gizmo_assets.add(gizmo),
+        line_config: GizmoLineConfig {
+            width: 4.,
+            ..default()
+        },
+        ..default()
+    });
 }

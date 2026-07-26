@@ -29,6 +29,7 @@ pub enum StuffTile {
     Bridge,
     Gate,
     Wall,
+    FaceId,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -112,6 +113,13 @@ pub fn load_world_map(map_json: &MapJson) -> Result<WorldMap, eyre::Error> {
         MapTile {
             ground: GroundTile::Ground,
             stuff: StuffTile::Wall,
+        },
+    );
+    tile_mapping.insert(
+        [4, 255, 26, 255],
+        MapTile {
+            ground: GroundTile::Ground,
+            stuff: StuffTile::FaceId,
         },
     );
 

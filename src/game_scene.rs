@@ -1,7 +1,4 @@
-use crate::ecs::{
-    Arrow, ArrowBlock, AvailableActions, CameraRig, ConveyorBelt, Direction, Gate, GridLocation,
-    InitialObstructedSet, ObstructedSet, Orientation, Player, PressurePlate, WallSet,
-};
+use crate::ecs::{Arrow, ArrowBlock, AvailableActions, CameraRig, ConveyorBelt, Direction, FaceId, Gate, GridLocation, InitialObstructedSet, ObstructedSet, Orientation, Player, PressurePlate, WallSet};
 use crate::map_loader::{GroundTile, StuffTile, TileLayer};
 use crate::signal_logic::TimerBank;
 use crate::ui::ui;
@@ -332,6 +329,35 @@ fn generate_map(
                     obstructed_set.0.insert(uvec3(i as u32, 0, j as u32));
                     obstructed_set.0.insert(uvec3(i as u32 + 1, 0, j as u32));
                 }
+            }
+            if tile.stuff == StuffTile::FaceId {
+                let location = uvec3(i as u32, 0, j as u32);
+                let this_orientation = world_map.orientation[i][j];
+                let direction = match this_orientation {
+                    1 => Direction::North,
+                    2 => Direction::West,
+                    3 => Direction::South,
+                    4 => Direction::East,
+                    _ => {
+                        error!("Found an arrow block at {}, {} with no orientation", i, j);
+                        Direction::North
+                    }
+                };
+                let entity = commands.spawn_scene(bsn! {
+                    template(|ctx| {
+                        Ok(WorldAssetRoot(ctx.resource::<AssetServer>().load(
+                            GltfAssetLabel::Scene(0).from_asset("models/face_id_lock.gltf")
+                        )))
+                    })
+                    Transform {
+                        translation: vec3(i as f32 * GRID_SIZE.x, 0.0, j as f32 * GRID_SIZE.y)
+                        rotation: { direction.to_rotation() * Quat::from_rotation_y(PI) },
+                    }
+                    GridLocation(vec3(i as f32, 0.0, j as f32))
+                    FaceId { direction }
+                });
+                warn!("face id entity: {:?}", entity.id());
+                obstructed_set.0.insert(location);
             }
         }
     }
