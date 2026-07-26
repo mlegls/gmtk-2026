@@ -44,7 +44,6 @@ fn pressure_plate_sfx(
 
 fn update_switches(
     player: Single<&GridLocation, With<Player>>,
-    pressure_plates: Query<&GridLocation, (With<PressurePlate>, Without<Player>)>,
     timers: Query<(&GridLocation, &TimerBank)>,
     world_map: Res<WorldMap>,
     mut switches: ResMut<SwitchStates>,
@@ -61,12 +60,9 @@ fn update_switches(
 
     let snapshot = SignalSnapshot::capture(&switches, &timers);
     let player_position = uvec2(player.0.x as u32, player.0.z as u32);
-    let has_physical_plate = pressure_plates
-        .iter()
-        .any(|location| uvec2(location.0.x as u32, location.0.z as u32) == player_position);
-    let has_invisible_activation = world_map.touched_switches.contains_key(&player_position)
+    let has_activation_effect = world_map.touched_switches.contains_key(&player_position)
         || world_map.input_effects.contains_key(&player_position);
-    let active_trigger = (has_physical_plate || has_invisible_activation)
+    let active_trigger = has_activation_effect
         .then_some(player_position)
         .filter(|position| activation_at(&world_map, *position, &snapshot).unwrap_or(true)); // is the pressure plate itself active (e.g. for timer-conditional plate)
 
