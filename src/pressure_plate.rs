@@ -47,7 +47,7 @@ fn pressure_plate_sfx(
 // also check if it has a physical pressure plate.
 //
 // if it activates a switch, do the switch's thing (toggle or hold). if it has a physical pressure plate, also do the sound/animation
-fn update_switches(
+pub(crate) fn update_switches(
     player: Single<&GridLocation, With<Player>>,
     pressure_plates: Query<&GridLocation, (With<PressurePlate>, Without<Player>)>,
     timers: Query<(&GridLocation, &TimerBank)>,
