@@ -6,7 +6,7 @@ use crate::ecs::{
 use crate::map_loader::{GroundTile, StuffTile};
 use crate::signal_logic::TimerBank;
 use crate::ui::ui;
-use crate::{GRID_SIZE, map_loader::WorldMap};
+use crate::{GRID_SIZE, PLAYER_START, map_loader::WorldMap};
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
 use std::f32::consts::PI;
@@ -68,9 +68,13 @@ fn isometric_camera() -> impl Scene {
 
 fn player() -> impl Scene {
     bsn! {
-        Transform::from_xyz(20.0 * GRID_SIZE.x, 0.5, 12.0 * GRID_SIZE.y)
+        Transform::from_xyz(
+            PLAYER_START.x * GRID_SIZE.x,
+            0.5,
+            PLAYER_START.z * GRID_SIZE.y,
+        )
         Visibility::default()
-        GridLocation(Vec3::new(20.0, 0.0, 12.0))
+        GridLocation(PLAYER_START)
         Children [
             template(|ctx| {
                 Ok(WorldAssetRoot(ctx.resource::<AssetServer>().load(

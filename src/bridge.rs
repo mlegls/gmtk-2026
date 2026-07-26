@@ -3,8 +3,12 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 use crate::GRID_SIZE;
-use crate::ecs::{GridLocation, ObstructedSet, SignalSystems};
+use crate::PLAYER_START;
+use crate::ecs::{
+    GridLocation, InitialObstructedSet, Moving, ObstructedSet, Player, SignalSystems,
+};
 use crate::map_loader::{GroundTile, StuffTile, TileLayer, WorldMap};
+use crate::movement::place_player;
 use crate::sfx::{PlaySfx, Sfx, SfxSystems};
 use crate::signal_logic::{SignalSnapshot, SwitchStates, TimerBank, activation_at};
 
@@ -18,6 +22,7 @@ pub struct Bridge {
     traversable_when_intact: bool,
     collapsed: bool,
     fall_speed: f32,
+    wait_for_inactive: bool,
 }
 
 impl Bridge {
@@ -32,10 +37,21 @@ impl Bridge {
             traversable_when_intact,
             collapsed: false,
             fall_speed: 0.0,
+            wait_for_inactive: false,
         }
     }
 
     pub fn reset(&mut self, transform: &mut Transform) {
+        self.reset_transform(transform);
+        self.wait_for_inactive = false;
+    }
+
+    fn reset_after_player_fall(&mut self, transform: &mut Transform) {
+        self.reset_transform(transform);
+        self.wait_for_inactive = true;
+    }
+
+    fn reset_transform(&mut self, transform: &mut Transform) {
         self.collapsed = false;
         self.fall_speed = 0.0;
         transform.translation = self.initial_translation;
@@ -287,7 +303,8 @@ pub fn bridge_plugin(app: &mut App) {
         Update,
         begin_collapse
             .in_set(SignalSystems::Read)
-            .in_set(SfxSystems::Trigger),
+            .in_set(SfxSystems::Trigger)
+            .after(crate::movement::do_movement),
     )
     .add_systems(Update, animate_fall.after(begin_collapse));
 }
@@ -295,21 +312,37 @@ pub fn bridge_plugin(app: &mut App) {
 fn begin_collapse(
     switches: Res<SwitchStates>,
     world_map: Res<WorldMap>,
-    timers: Query<(&GridLocation, &TimerBank)>,
-    mut bridges: Query<(&mut Bridge, &mut Transform, &GridLocation)>,
+    timers: Query<(&GridLocation, &TimerBank), Without<Player>>,
+    mut bridges: Query<
+        (&mut Bridge, &mut Transform, &GridLocation),
+        (With<Bridge>, Without<Player>),
+    >,
+    player: Single<(Entity, &mut Transform, &mut GridLocation), (With<Player>, Without<Bridge>)>,
+    initial_obstructions: Res<InitialObstructedSet>,
     mut obstructed_set: ResMut<ObstructedSet>,
     mut play_sfx: MessageWriter<PlaySfx>,
+    mut commands: Commands,
 ) {
     let snapshot = SignalSnapshot::capture(&switches, &timers);
+    let player_location = player.2.0.as_uvec3();
     let mut collapsed_any = false;
+    let mut player_fell = false;
 
     for (mut bridge, mut transform, location) in &mut bridges {
         let position = uvec2(location.0.x as u32, location.0.z as u32);
         let active = activation_at(&world_map, position, &snapshot).unwrap_or(false);
 
+        if bridge.wait_for_inactive {
+            if !active {
+                bridge.wait_for_inactive = false;
+            }
+            continue;
+        }
+
         if active && !bridge.collapsed {
             bridge.collapsed = true;
             collapsed_any = true;
+            player_fell |= location.0.as_uvec3() == player_location;
             if bridge.blocks_when_collapsed {
                 obstructed_set.0.insert(location.0.as_uvec3());
             }
@@ -318,6 +351,28 @@ fn begin_collapse(
             bridge.reset(&mut transform);
             if traversable_when_intact {
                 obstructed_set.0.remove(&location.0.as_uvec3());
+            }
+        }
+    }
+
+    if player_fell {
+        let (player_entity, mut player_transform, mut player_location) = player.into_inner();
+        let rotation = player_transform.rotation;
+        place_player(
+            &mut player_transform,
+            &mut player_location,
+            PLAYER_START,
+            rotation,
+        );
+        commands.entity(player_entity).remove::<Moving>();
+
+        for (mut bridge, mut transform, location) in &mut bridges {
+            bridge.reset_after_player_fall(&mut transform);
+            let location = location.0.as_uvec3();
+            if initial_obstructions.0.contains(&location) {
+                obstructed_set.0.insert(location);
+            } else {
+                obstructed_set.0.remove(&location);
             }
         }
     }

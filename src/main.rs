@@ -40,6 +40,7 @@ use bevy::prelude::*;
 use std::collections::HashSet;
 
 pub const MAX_TURN_COUNT: u32 = 1000;
+pub const PLAYER_START: Vec3 = vec3(20.0, 0.0, 12.0);
 
 pub const PLAYER_SIZE: Vec3 = vec3(1.0, 1.0, 1.0);
 pub const GRID_SIZE: Vec2 = vec2(1.0, 1.0);

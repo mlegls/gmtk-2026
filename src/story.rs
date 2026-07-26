@@ -1,4 +1,3 @@
-use crate::MAX_TURN_COUNT;
 use crate::bridge::Bridge;
 use crate::ecs::{
     Altar, Arrow, ArrowBlock, AvailableActions, CameraRig, Direction, Gate, GridLocation,
@@ -7,11 +6,11 @@ use crate::ecs::{
 };
 use crate::movement::CameraTurn;
 use crate::signal_logic::{SwitchStates, TimerBank};
+use crate::{MAX_TURN_COUNT, PLAYER_START};
 use bevy::prelude::*;
 use bevy::text::LineBreak;
 use std::collections::VecDeque;
 
-const PLAYER_START: Vec3 = vec3(20.0, 0.0, 12.0);
 const STORY_TURNS: u8 = 3;
 
 const BEGINNING: [&str; 2] = [
