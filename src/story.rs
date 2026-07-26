@@ -6,6 +6,7 @@ use crate::ecs::{
 };
 use crate::movement::CameraTurn;
 use crate::signal_logic::{SwitchStates, TimerBank};
+use crate::ui::turn_count_label;
 use crate::{MAX_TURN_COUNT, PLAYER_START};
 use bevy::prelude::*;
 use bevy::text::LineBreak;
@@ -247,7 +248,7 @@ fn reset_player(
     *actions = AvailableActions::default();
     arrow.rotation = Quat::IDENTITY;
     **turn_counter = MAX_TURN_COUNT;
-    ***turn_count_text = MAX_TURN_COUNT.to_string();
+    ***turn_count_text = turn_count_label(MAX_TURN_COUNT);
     camera.1.rotation = Quat::IDENTITY;
     commands.entity(entity).remove::<Moving>();
     commands.entity(camera.0).remove::<CameraTurn>();
