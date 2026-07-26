@@ -68,7 +68,7 @@ fn update_switches(
         || world_map.input_effects.contains_key(&player_position);
     let active_trigger = (has_physical_plate || has_invisible_activation)
         .then_some(player_position)
-        .filter(|position| activation_at(&world_map, *position, &snapshot).unwrap_or(true));
+        .filter(|position| activation_at(&world_map, *position, &snapshot).unwrap_or(true)); // is the pressure plate itself active (e.g. for timer-conditional plate)
 
     let touched_switches = active_trigger
         .and_then(|position| world_map.touched_switches.get(&position))
