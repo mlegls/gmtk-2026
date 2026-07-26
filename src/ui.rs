@@ -7,6 +7,11 @@ use bevy::prelude::*;
 const RESET_CONFIRMATION: &str = "are you sure you'd like to reset? press r again if so.";
 const ADD_TURNS_CONFIRMATION: &str =
     "are you sure you'd like to add 10 turns? press f again if so.";
+const TURN_COUNT_SUFFIX: &str = "turns until the end of the world";
+
+pub(crate) fn turn_count_label(turns: u32) -> String {
+    format!("{turns} {TURN_COUNT_SUFFIX}")
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum UtilityAction {
@@ -56,8 +61,16 @@ pub fn ui() -> impl Scene {
         Children [
             (
                 template(|ctx| {
-                    Ok(Text(ctx.resource::<TurnCounter>().to_string()))
+                    Ok(Text(turn_count_label(ctx.resource::<TurnCounter>().0)))
                 })
+                TextFont {
+                    font_size: px(24.0),
+                }
+                Node {
+                    position_type: PositionType::Absolute,
+                    top: px(24.0),
+                    left: px(24.0),
+                }
                 TurnCountText
             )
         ]
@@ -70,8 +83,8 @@ fn setup_action_grid(mut commands: Commands) {
             Name::new("available actions"),
             Node {
                 position_type: PositionType::Absolute,
-                top: px(16.0),
-                right: px(16.0),
+                top: px(64.0),
+                left: px(16.0),
                 display: Display::Grid,
                 grid_template_columns: RepeatedGridTrack::px(3, 52.0),
                 grid_template_rows: RepeatedGridTrack::px(4, 44.0),
@@ -194,6 +207,6 @@ fn update_turn_count(
 ) {
     let completed_turn = completed_turn_recv.read().next().is_some();
     if completed_turn || turn_counter.is_changed() {
-        ***turn_count_text = turn_counter.to_string();
+        ***turn_count_text = turn_count_label(turn_counter.0);
     }
 }
