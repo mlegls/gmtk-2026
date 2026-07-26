@@ -4,6 +4,7 @@ pub mod arrow_block;
 pub mod bridge;
 pub mod conveyor_belt;
 pub mod ecs;
+pub mod face_id;
 mod game_scene;
 pub mod gate;
 pub mod map_json;
@@ -22,6 +23,7 @@ use crate::arrow_block::arrow_block_plugin;
 use crate::bridge::bridge_plugin;
 use crate::conveyor_belt::conveyor_belt_plugin;
 use crate::ecs::{CompletedTurn, DebugMode, ObstructedSet, SignalSystems, TurnCounter, WallSet};
+use crate::face_id::face_id_plugin;
 use crate::game_scene::game_scene_plugin;
 use crate::gate::gate_plugin;
 use crate::map_json::MapJson;
@@ -76,6 +78,7 @@ fn main() {
         .add_plugins(music_plugin)
         .add_plugins(sfx_plugin)
         .add_plugins(story_plugin)
+        .add_plugins(face_id_plugin)
         .configure_sets(
             Update,
             (

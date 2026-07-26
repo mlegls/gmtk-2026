@@ -42,7 +42,12 @@ fn pressure_plate_sfx(
     }
 }
 
-fn update_switches(
+// check if the block the player is on has "activations" (if the json config makes it activate switches)
+//
+// also check if it has a physical pressure plate.
+//
+// if it activates a switch, do the switch's thing (toggle or hold). if it has a physical pressure plate, also do the sound/animation
+pub(crate) fn update_switches(
     player: Single<&GridLocation, With<Player>>,
     timers: Query<(&GridLocation, &TimerBank)>,
     world_map: Res<WorldMap>,

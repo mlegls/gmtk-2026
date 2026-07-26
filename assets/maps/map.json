@@ -38,7 +38,7 @@
   },
   "associations": [
     {
-      "position": [22, 5],
+      "position": [19, 5],
       "on_activate": {
         "touch_switch": "pressure_plate_W",
         "replace_timers": {

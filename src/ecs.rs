@@ -126,6 +126,10 @@ pub struct InitialObstructedSet(pub HashSet<UVec3>);
 //pub struct SpecialTileSet(pub HashMap<UVec3, (SpecialTileType, Entity)>);
 #[derive(Component, Clone, Default, Debug)]
 pub struct PressurePlate;
+#[derive(Component, Clone, Default, Debug)]
+pub struct FaceId {
+    pub direction: Direction,
+}
 #[derive(Component, Clone, Debug, Default)]
 pub enum Gate {
     Opened,
