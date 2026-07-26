@@ -177,12 +177,14 @@ pub fn load_world_map(map_json: &MapJson) -> Result<WorldMap, eyre::Error> {
     }
 
     let tiles = load_layer(
-        include_bytes!("../assets/maps/map.png"),
+        //include_bytes!("../assets/maps/map.png"),
+        std::fs::read("assets/maps/map.png").unwrap().as_ref(),
         "map",
         tile_mapping,
     )?;
     let orientation = load_layer(
-        include_bytes!("../assets/maps/orientation.png"),
+        //include_bytes!("../assets/maps/orientation.png"),
+        std::fs::read("assets/maps/orientation.png").unwrap().as_ref(),
         "orientation",
         orientation_mapping,
     )?;

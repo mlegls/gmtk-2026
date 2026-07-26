@@ -49,8 +49,9 @@ pub const GRID_SIZE: Vec2 = vec2(1.0, 1.0);
 pub const ANIMATION_LENGTH: f32 = 0.25;
 
 fn main() {
-    let map_json = include_bytes!("../assets/maps/map.json").as_ref();
-    let map_json: MapJson = serde_json::from_reader(map_json).unwrap();
+    //let map_json = include_bytes!("../assets/maps/map.json").as_ref();
+    let map_json = std::fs::read_to_string("assets/maps/map.json").unwrap();
+    let map_json: MapJson = serde_json::from_reader(map_json.as_bytes()).unwrap();
 
     let world_map = load_world_map(&map_json).expect("failed to load world map");
     let debug_mode = std::env::args().any(|argument| argument == "--debug");
