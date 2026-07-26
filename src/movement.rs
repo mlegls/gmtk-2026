@@ -127,7 +127,7 @@ pub(crate) fn input(
     if action_just_pressed(&keys, available_actions, PlayerAction::RollForward) {
         // roll north 1 space
         let future_grid_location =
-            grid_location.0 + orientation.0.to_rotation() * Direction::North.to_vec_direction();
+            grid_location.0 + oriented_grid_offset(orientation.0, Direction::North);
         let Some(roll_in_place) = roll_behavior(
             future_grid_location.as_uvec3(),
             &obstructed_set,
@@ -147,7 +147,7 @@ pub(crate) fn input(
     if action_just_pressed(&keys, available_actions, PlayerAction::RollBackward) {
         // roll south
         let future_grid_location =
-            grid_location.0 + orientation.0.to_rotation() * Direction::South.to_vec_direction();
+            grid_location.0 + oriented_grid_offset(orientation.0, Direction::South);
         let Some(roll_in_place) = roll_behavior(
             future_grid_location.as_uvec3(),
             &obstructed_set,
@@ -167,7 +167,7 @@ pub(crate) fn input(
     if action_just_pressed(&keys, available_actions, PlayerAction::RollLeft) {
         // roll west
         let future_grid_location =
-            grid_location.0 + orientation.0.to_rotation() * Direction::West.to_vec_direction();
+            grid_location.0 + oriented_grid_offset(orientation.0, Direction::West);
         let Some(roll_in_place) = roll_behavior(
             future_grid_location.as_uvec3(),
             &obstructed_set,
@@ -187,7 +187,7 @@ pub(crate) fn input(
     if action_just_pressed(&keys, available_actions, PlayerAction::RollRight) {
         // roll east
         let future_grid_location =
-            grid_location.0 + orientation.0.to_rotation() * Direction::East.to_vec_direction();
+            grid_location.0 + oriented_grid_offset(orientation.0, Direction::East);
         let Some(roll_in_place) = roll_behavior(
             future_grid_location.as_uvec3(),
             &obstructed_set,
@@ -246,7 +246,7 @@ pub(crate) fn input(
     if action_just_pressed(&keys, available_actions, PlayerAction::SlideLeft) {
         // slide left (translate, no roll)
         let future_grid_location =
-            grid_location.0 + orientation.0.to_rotation() * Direction::West.to_vec_direction();
+            grid_location.0 + oriented_grid_offset(orientation.0, Direction::West);
         let Some(roll_in_place) = roll_behavior(
             future_grid_location.as_uvec3(),
             &obstructed_set,
@@ -270,7 +270,7 @@ pub(crate) fn input(
     if action_just_pressed(&keys, available_actions, PlayerAction::SlideRight) {
         // slide right
         let future_grid_location =
-            grid_location.0 + orientation.0.to_rotation() * Direction::East.to_vec_direction();
+            grid_location.0 + oriented_grid_offset(orientation.0, Direction::East);
         let Some(roll_in_place) = roll_behavior(
             future_grid_location.as_uvec3(),
             &obstructed_set,
@@ -300,6 +300,17 @@ pub(crate) fn input(
             roll_in_place: false,
         });
     }
+}
+
+fn oriented_grid_offset(orientation: Direction, relative_direction: Direction) -> Vec3 {
+    let world_direction = match relative_direction {
+        Direction::North => orientation,
+        Direction::South => orientation.turn_right().turn_right(),
+        Direction::West => orientation.turn_left(),
+        Direction::East => orientation.turn_right(),
+        _ => panic!("grid movement requires a cardinal relative direction"),
+    };
+    world_direction.to_grid_location_offset()
 }
 
 fn roll_behavior(
@@ -377,13 +388,13 @@ pub fn do_movement(
         Direction::SlideLeft => translate_player(
             &mut transform,
             &mut grid_location,
-            orientation.0.to_rotation() * Direction::West.to_grid_location_offset(),
+            oriented_grid_offset(orientation.0, Direction::West),
             progress,
         ),
         Direction::SlideRight => translate_player(
             &mut transform,
             &mut grid_location,
-            orientation.0.to_rotation() * Direction::East.to_grid_location_offset(),
+            oriented_grid_offset(orientation.0, Direction::East),
             progress,
         ),
         Direction::Left | Direction::Right | Direction::Around => {
@@ -513,7 +524,7 @@ pub fn roll_player(
         return false;
     }
 
-    grid_location.0 += orient_rot * direction.to_grid_location_offset();
+    grid_location.0 += oriented_grid_offset(orientation.0, direction);
     transform.translation = grid_location.to_world_space() + vec3(0.0, PLAYER_SIZE.y / 2.0, 0.0);
     transform.rotation = Quat::from_axis_angle(axis, angle) * initial_rotation;
     true
