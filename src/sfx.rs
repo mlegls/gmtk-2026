@@ -56,11 +56,10 @@ pub fn sfx_plugin(app: &mut App) {
 }
 
 fn load_sfx(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let slide_and_turn = asset_server.load("sfx/terrain/Terrain A.ogg");
     commands.insert_resource(SfxAssets {
         roll: asset_server.load("sfx/terrain/Terrain B.ogg"),
-        slide: slide_and_turn.clone(),
-        turn: slide_and_turn,
+        slide: asset_server.load("sfx/terrain/Terrain F.ogg"),
+        turn: asset_server.load("sfx/terrain/Terrain E.ogg"),
         conveyor: asset_server.load("sfx/Conveyer.ogg"),
         pressure_plate: asset_server.load("sfx/Pressure Plate.ogg"),
         gate: asset_server.load("sfx/door/Door A.ogg"),
