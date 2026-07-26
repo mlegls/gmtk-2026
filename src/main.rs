@@ -13,6 +13,7 @@ pub mod pressure_plate;
 pub mod sfx;
 pub mod signal_logic;
 pub mod story;
+pub mod timer_visual;
 pub mod ui;
 
 use crate::altar::altar_plugin;
@@ -29,6 +30,7 @@ use crate::pressure_plate::pressure_plate_plugin;
 use crate::sfx::sfx_plugin;
 use crate::signal_logic::signal_logic_plugin;
 use crate::story::story_plugin;
+use crate::timer_visual::timer_visual_plugin;
 use crate::ui::ui_plugin;
 use bevy::prelude::*;
 use std::collections::HashSet;
@@ -67,6 +69,7 @@ fn main() {
         .add_plugins(arrow_block_plugin)
         .add_plugins(altar_plugin)
         .add_plugins(signal_logic_plugin)
+        .add_plugins(timer_visual_plugin)
         .add_plugins(music_plugin)
         .add_plugins(sfx_plugin)
         .add_plugins(story_plugin)

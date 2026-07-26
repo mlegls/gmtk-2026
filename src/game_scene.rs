@@ -339,10 +339,11 @@ fn generate_map(
         commands.spawn((
             Transform::from_xyz(
                 location.x as f32 * GRID_SIZE.x,
-                3.0,
+                0.0,
                 location.y as f32 * GRID_SIZE.y,
             ),
             GridLocation(vec3(location.x as f32, 0.0, location.y as f32)),
+            Visibility::Inherited,
             TimerBank::new(slots, &world_map.timers),
         ));
     }

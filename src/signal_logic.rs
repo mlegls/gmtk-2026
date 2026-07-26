@@ -61,6 +61,14 @@ impl SwitchStates {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TimerVisualKind {
+    Periodic,
+    AfterCountdown,
+    DuringCountdown,
+    OneShot,
+}
+
 #[derive(Clone, Debug)]
 pub struct TimerInstance {
     template: TimerTemplate,
@@ -86,7 +94,7 @@ enum TimerRuntime {
     },
     OneShot {
         running: bool,
-        remaining: u32,
+        remaining: Option<u32>,
         pulse_remaining: u32,
         output: bool,
     },
@@ -125,7 +133,7 @@ impl TimerInstance {
                 initial,
             } => TimerRuntime::OneShot {
                 running: initial,
-                remaining: turns,
+                remaining: Some(turns),
                 pulse_remaining: pulse_turns,
                 output: false,
             },
@@ -138,6 +146,80 @@ impl TimerInstance {
             | TimerRuntime::AfterCountdown { output, .. }
             | TimerRuntime::DuringCountdown { output, .. }
             | TimerRuntime::OneShot { output, .. } => output,
+        }
+    }
+
+    /// rendering-relevant data: number, remaining ratio, and timer type
+    pub fn visual_state(&self) -> Option<(u32, f32, TimerVisualKind)> {
+        match (&self.template, &self.runtime) {
+            (
+                TimerTemplate::Periodic { period, .. },
+                TimerRuntime::Periodic {
+                    running,
+                    turn_in_cycle,
+                    ..
+                },
+            ) if *running => {
+                let remaining = period.saturating_sub(*turn_in_cycle);
+                Some((
+                    remaining,
+                    remaining as f32 / (*period).max(1) as f32,
+                    TimerVisualKind::Periodic,
+                ))
+            }
+            (
+                TimerTemplate::ActiveAfterCountdown { turns, .. },
+                TimerRuntime::AfterCountdown {
+                    running,
+                    remaining,
+                    ..
+                },
+            ) if *running => Some((
+                *remaining,
+                *remaining as f32 / (*turns).max(1) as f32,
+                TimerVisualKind::AfterCountdown,
+            )),
+            (
+                TimerTemplate::ActiveDuringCountdown { turns, .. },
+                TimerRuntime::DuringCountdown {
+                    running,
+                    remaining,
+                    ..
+                },
+            ) if *running => Some((
+                *remaining,
+                *remaining as f32 / (*turns).max(1) as f32,
+                TimerVisualKind::DuringCountdown,
+            )),
+            (
+                TimerTemplate::OneShot {
+                    turns,
+                    pulse_turns,
+                    ..
+                },
+                TimerRuntime::OneShot {
+                    running,
+                    remaining,
+                    pulse_remaining,
+                    output,
+                },
+            ) if *running || *output => {
+                if let Some(remaining) = remaining {
+                    Some((
+                        *remaining,
+                        *remaining as f32 / (*turns).max(1) as f32,
+                        TimerVisualKind::OneShot,
+                    ))
+                } else {
+                    let visible_pulse = pulse_remaining + u32::from(*output);
+                    Some((
+                        visible_pulse,
+                        visible_pulse as f32 / (*pulse_turns).max(1) as f32,
+                        TimerVisualKind::OneShot,
+                    ))
+                }
+            }
+            _ => None,
         }
     }
 
@@ -159,11 +241,11 @@ impl TimerInstance {
                     *output = false;
                     return;
                 }
-                *turn_in_cycle += 1;
-                *output = *turn_in_cycle > period - pulse_turns;
                 if *turn_in_cycle == *period {
                     *turn_in_cycle = 0;
                 }
+                *turn_in_cycle += 1;
+                *output = *turn_in_cycle > period.saturating_sub(*pulse_turns);
             }
             (
                 TimerTemplate::ActiveAfterCountdown { .. },
@@ -173,12 +255,16 @@ impl TimerInstance {
                     output,
                 },
             ) => {
-                if *running {
-                    *remaining = remaining.saturating_sub(1);
-                    if *remaining == 0 {
-                        *running = false;
-                        *output = true;
-                    }
+                if !*running {
+                    return;
+                }
+                if *remaining == 0 {
+                    *running = false;
+                    return;
+                }
+                *remaining -= 1;
+                if *remaining == 0 {
+                    *output = true;
                 }
             }
             (
@@ -189,15 +275,17 @@ impl TimerInstance {
                     output,
                 },
             ) => {
-                if *running {
-                    *output = true;
-                    *remaining = remaining.saturating_sub(1);
-                    if *remaining == 0 {
-                        *running = false;
-                    }
-                } else {
+                if !*running {
                     *output = false;
+                    return;
                 }
+                if *remaining == 0 {
+                    *running = false;
+                    *output = false;
+                    return;
+                }
+                *output = true;
+                *remaining -= 1;
             }
             (
                 TimerTemplate::OneShot { .. },
@@ -213,10 +301,14 @@ impl TimerInstance {
                     return;
                 }
 
-                if *remaining > 0 {
-                    *remaining -= 1;
-                    if *remaining > 0 {
-                        return;
+                if let Some(countdown) = remaining {
+                    if *countdown > 0 {
+                        *countdown -= 1;
+                        if *countdown > 0 {
+                            return;
+                        }
+                    } else {
+                        *remaining = None;
                     }
                 }
 
@@ -231,6 +323,7 @@ impl TimerInstance {
             _ => unreachable!("timer runtime must match its template"),
         }
     }
+
 }
 
 #[derive(Component, Clone, Debug)]
