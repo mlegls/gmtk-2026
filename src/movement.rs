@@ -14,6 +14,12 @@ use std::time::Instant;
 const VANTAGE_POINT: UVec2 = uvec2(27, 30);
 const NORMAL_VIEW_HEIGHT: f32 = 12.0;
 const OVERVIEW_VIEW_HEIGHT: f32 = MAP_HEIGHT as f32 + 8.0;
+const NORMAL_LIGHT_HEIGHT: f32 = 8.0;
+const OVERVIEW_LIGHT_HEIGHT: f32 = 80.0;
+const NORMAL_LIGHT_RANGE: f32 = 20.0;
+const OVERVIEW_LIGHT_RANGE: f32 = MAP_HEIGHT as f32 * 2.0;
+const NORMAL_LIGHT_INTENSITY: f32 = 1_000_000.0;
+const OVERVIEW_LIGHT_INTENSITY: f32 = 100_000_000.0;
 const VANTAGE_TRANSITION_SECONDS: f32 = 1.0;
 
 #[derive(Resource, Default)]
@@ -637,6 +643,10 @@ fn follow_camera(
         (&mut Transform, &mut Projection),
         (With<Camera3d>, Without<CameraRig>, Without<Player>),
     >,
+    light: Single<
+        (&mut PointLight, &mut Transform),
+        (Without<Camera3d>, Without<CameraRig>, Without<Player>),
+    >,
     mut vantage_camera: ResMut<VantageCamera>,
 ) {
     let (player_transform, grid_location) = player.into_inner();
@@ -663,6 +673,14 @@ fn follow_camera(
     );
     camera_rig.translation = player_transform.translation.lerp(map_center, blend);
 
+    let (mut light, mut light_transform) = light.into_inner();
+    let light_height = NORMAL_LIGHT_HEIGHT.lerp(OVERVIEW_LIGHT_HEIGHT, blend);
+    let light_world_position = player_transform.translation + Vec3::Y * light_height;
+    light_transform.translation = camera_rig
+        .compute_affine()
+        .inverse()
+        .transform_point3(light_world_position);
+
     let normal_transform = Transform {
         translation: vec3(40.0, 32.66, 40.0),
         rotation: Quat::from_euler(EulerRot::YXZ, PI / 4.0, -PI / 6.0, 0.0),
@@ -677,6 +695,8 @@ fn follow_camera(
     camera_transform.rotation = normal_transform
         .rotation
         .slerp(overview_transform.rotation, blend);
+    light.range = NORMAL_LIGHT_RANGE.lerp(OVERVIEW_LIGHT_RANGE, blend);
+    light.intensity = NORMAL_LIGHT_INTENSITY.lerp(OVERVIEW_LIGHT_INTENSITY, blend);
 
     if let Projection::Orthographic(orthographic) = projection.as_mut() {
         orthographic.scaling_mode = ScalingMode::FixedVertical {
